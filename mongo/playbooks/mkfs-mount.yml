@@ -1,0 +1,26 @@
+--- 
+- 
+  hosts: mongodb
+  remote_user: centos
+  tasks: 
+    - 
+      filesystem: 
+        dev: "{{ item }}"
+        fstype: xfs 
+      name: "mkfs xfs on \"{{ mongodb_vm_volumes }}\""
+      with_items: 
+        - "{{ mongodb_vm_volumes }}"
+
+    - 
+      file: 
+        path: "{{ item }}"
+        state: directory
+      name: "mkdir \"{{ mongodb_vm_mountpoints }}\""
+      with_items: 
+        - "{{ mongodb_vm_mountpoints }}"
+    - 
+      name: "mount \"{{ mongodb_vm_volumes }}\" on \"{{ mongodb_vm_mountpoints }}\""
+      shell: "mount {{ item.1 }} {{ item.0 }}"
+      with_together: 
+        - "{{ mongodb_vm_mountpoints }}"
+        - "{{ mongodb_vm_volumes }}"

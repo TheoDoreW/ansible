@@ -1,0 +1,9 @@
+---
+# file: group_vars/all
+
+mongodb_vm_volumes: '/dev/nvme0n1'
+mongodb_vm_mountpoints: '/data1'
+mongodb_download_url: 'http://10.1.0.4/mongodb/mongodb-linux-x86_64-rhel70-3.4.17.tgz'
+mongodb_file_name: 'mongodb-linux-x86_64-rhel70-3.4.17'
+mongodb_install_dir: '/usr/local/mongodb'
+mongodb_data_dir: '/data1/mongodb'

@@ -1,0 +1,32 @@
+--- 
+- 
+  name: "install epel yum repos"
+  yum: "name=epel-release state=present"
+- 
+  group: "name=mongodb gid=3000 state=present"
+  name: "add mongodb group"
+- 
+  name: "add mongodb user"
+  user: "name={{ item.name }} group=mongodb uid={{ item.uid }} shell=/bin/bash state=present"
+  with_items: 
+    - 
+      name: mongodb
+      uid: "3000"
+- 
+  name: "copy mongodb_env.sh"
+  template: "src=mongodb_env.sh.j2 dest=/etc/profile.d/mongodb_env.sh owner=root group=root mode=644"
+- 
+  file: "path={{ mongodb_install_dir }} owner=root group=root state=directory"
+  name: "create mongodb work directory"
+- 
+  name: "download and untar mongodb tarball"
+  unarchive: "src={{ mongodb_download_url }} dest={{ mongodb_install_dir }} copy=no owner=mongodb group=mongodb"
+- 
+  file: "src={{ mongodb_install_dir }}/{{ mongodb_file_name }} dest={{ mongodb_install_dir }}/mongodb-release owner=root group=root state=link"
+  name: "softlink mongodb work directory"
+- 
+  file: "path={{ mongodb_install_dir }}/{{ mongodb_file_name }} owner=mongodb group=mongodb recurse=yes state=directory"
+  name: "chown mongodb work directory"
+-
+  file: "path={{ mongodb_data_dir }} owner=mongodb group=mongodb state=directory"
+  name: "create mongodb data directory"

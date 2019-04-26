@@ -1,0 +1,6 @@
+---
+- hosts: "{{ hosts }}" 
+  user: centos
+  tasks:
+  - name: start mongodb shard
+    shell: sudo su - mongodb -c "mongod -f {{ mongodb_install_dir }}/mongodb-release/conf/shard{{ id }}.conf"

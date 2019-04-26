@@ -1,0 +1,4 @@
+--- 
+- 
+  name: "copy configserver.conf.j2 to mongodb conf directory"
+  template: "src=configserver.conf.j2 dest=/usr/local/mongodb/mongodb-release/conf/configserver.conf owner=mongodb group=mongodb mode=664"

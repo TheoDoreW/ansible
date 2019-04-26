@@ -1,0 +1,6 @@
+---
+- hosts: configserver
+  user: centos
+  tasks:
+  - name: start mongodb configserver
+    shell: sudo su - mongodb -c "mongod -f {{ mongodb_install_dir }}/mongodb-release/conf/configserver.conf"

@@ -1,0 +1,39 @@
+#===================== Shard{{ id }} =======================
+systemLog:
+  destination: file
+  path: {{ mongodb_data_dir }}/shard{{ id }}/log/shard{{ id }}.log
+  logAppend: true
+  logRotate: rename
+
+net:
+  port: 6200{{ id }}
+  maxIncomingConnections: 65536
+  ipv6: false
+
+security:
+  keyFile: {{ mongodb_install_dir }}/mongodb-release/key/mongodb-keyfile 
+  authorization: enabled
+
+processManagement:
+  fork: true
+  pidFilePath: {{ mongodb_data_dir }}/shard{{ id }}/run/shard{{ id }}.pid
+
+sharding:
+  clusterRole: shardsvr
+
+replication:
+  oplogSizeMB: 153600
+  replSetName: shard{{ id }}
+
+storage:
+  dbPath: {{ mongodb_data_dir }}/shard{{ id }}/data
+  indexBuildRetry: false
+  directoryPerDB: true
+  engine: "wiredTiger"
+  wiredTiger:
+    engineConfig:
+      cacheSizeGB: "45"
+      journalCompressor: "zlib"
+      directoryForIndexes: true
+    collectionConfig:
+      blockCompressor: "zlib"

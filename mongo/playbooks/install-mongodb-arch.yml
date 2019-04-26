@@ -1,0 +1,5 @@
+---
+- hosts: mongodb
+  user: centos
+  roles:
+    - install-mongodb-arch

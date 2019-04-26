@@ -1,0 +1,6 @@
+---
+- hosts: mongos
+  user: centos
+  tasks:
+  - name: stop mongodb mongos
+    shell: sudo su - mongodb -c "kill $(ps aux |grep mongo[s] |awk '{print $2}')"

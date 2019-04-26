@@ -1,0 +1,4 @@
+--- 
+- 
+  name: "copy mongos.conf.j2 to mongodb conf directory"
+  template: "src=mongos.conf.j2 dest={{ mongodb_install_dir }}/mongodb-release/conf/mongos.conf owner=mongodb group=mongodb mode=664"

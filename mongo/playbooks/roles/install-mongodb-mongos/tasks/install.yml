@@ -1,0 +1,10 @@
+--- 
+- 
+  file: "path={{ mongodb_data_dir }}/mongos owner=mongodb group=mongodb state=directory"
+  name: "create mongodb mongos directory"
+- 
+  file: "path={{ mongodb_data_dir }}/mongos/{{ item }} owner=mongodb group=mongodb state=directory"
+  name: "create mongodb mongos subdirectory"
+  with_items: 
+    - log
+    - run

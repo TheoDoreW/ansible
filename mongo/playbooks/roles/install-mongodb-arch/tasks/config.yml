@@ -1,0 +1,16 @@
+--- 
+- 
+  name: "copy disable-transparent-hugepages to /etc/init.d"
+  template: "src=disable-transparent-hugepages.j2 dest=/etc/init.d/disable-transparent-hugepages owner=root group=root mode=755"
+- 
+  name: "chkconfig add and disable disable-transparent-hugepages"
+  shell: "chkconfig --add disable-transparent-hugepages && /etc/init.d/disable-transparent-hugepages start"
+-
+  file: "path={{ mongodb_data_dir }}/mongodb-release/{{ item }} owner=mongodb group=mongodb state=directory"
+  name: "create mongodb config directory"
+  with_items: 
+    - conf
+    - key
+-
+  name: "copy mongodb-keyfile.j2 to mongodb key directory"
+  template: "src=mongodb-keyfile.j2 dest={{ mongodb_install_dir }}/mongodb-release/key/mongodb-keyfile owner=mongodb group=mongodb mode=600"

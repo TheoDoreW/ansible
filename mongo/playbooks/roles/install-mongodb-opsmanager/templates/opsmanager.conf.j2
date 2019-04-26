@@ -1,0 +1,39 @@
+#============================= OpsManager ===============================
+systemLog:
+  destination: file
+  path: {{ mongodb_data_dir }}/opsmanager/log/opsmanager.log
+  logAppend: true
+  logRotate: rename
+
+net:
+  port: 27017
+  maxIncomingConnections: 65536
+  ipv6: false
+
+security:
+  keyFile: {{ mongodb_data_dir }}/key/mongodb-keyfile
+  authorization: enabled
+
+processManagement:
+  fork: true
+  pidFilePath: {{ mongodb_data_dir }}/opsmanager/run/opsmanager.pid
+
+sharding:
+  clusterRole: shardsvr
+
+replication:
+  oplogSizeMB: 153600
+  replSetName: opsmanager
+
+storage:
+  dbPath: {{ mongodb_data_dir }}/opsmanager/data
+  indexBuildRetry: false
+  directoryPerDB: true
+  engine: "wiredTiger"
+  wiredTiger:
+    engineConfig:
+      cacheSizeGB: "45"
+      journalCompressor: "zlib"
+      directoryForIndexes: true
+    collectionConfig:
+      blockCompressor: "zlib"

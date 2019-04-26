@@ -1,0 +1,4 @@
+---
+# file: group_vars/mongodb-shard1
+
+id: 1

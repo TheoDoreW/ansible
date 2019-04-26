@@ -1,0 +1,10 @@
+################################################################################################
+#                                                                                              #
+#                                   MongoDB Environment Variables                              #
+#                                                                                              #
+################################################################################################
+#========================================+== MongoDB ========+=================================#
+if [ -e /usr/local/mongodb/mongodb-release ]; then
+  export MONGODB_HOME=/usr/local/mongodb/mongodb-release
+  export PATH=$MONGODB_HOME/bin:$PATH
+fi

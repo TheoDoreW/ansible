@@ -1,0 +1,21 @@
+#============================= Mongos =============================
+systemLog:
+  destination: file
+  path: {{ mongodb_data_dir }}/mongos/log/mongos.log
+  logAppend: true
+  logRotate: rename
+
+net:
+  bindIp: "0.0.0.0"
+  port: 62201
+  maxIncomingConnections: 65536
+
+security:
+  keyFile: {{ mongodb_install_dir }}/mongodb-release/key/mongodb-keyfile 
+
+processManagement:
+  fork: true
+  pidFilePath: {{ mongodb_data_dir }}/mongos/run/mongos.pid
+
+sharding:
+  configDB: configserver/{{ groups.configserver | join(":61101,") }}:61101

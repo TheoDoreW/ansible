@@ -1,0 +1,6 @@
+--- 
+- 
+  hosts: configserver
+  roles: 
+    - install-mongodb-configserver
+  user: centos

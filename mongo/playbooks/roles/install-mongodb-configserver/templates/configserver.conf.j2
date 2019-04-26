@@ -1,0 +1,31 @@
+#================== Config Server ==================
+net:
+  bindIp: "0.0.0.0"
+  ipv6: false
+  maxIncomingConnections: 65536
+  port: 61101
+
+processManagement:
+  fork: true
+  pidFilePath: {{ mongodb_data_dir }}/configserver/run/configserver.pid
+
+replication:
+  oplogSizeMB: "20480"
+  replSetName: configserver
+
+security:
+  authorization: enabled
+  keyFile: {{ mongodb_install_dir }}/mongodb-release/key/mongodb-keyfile
+
+sharding:
+  clusterRole: configsvr
+
+storage:
+  dbPath: {{ mongodb_data_dir }}/configserver/data
+  indexBuildRetry: false
+
+systemLog:
+  destination: file
+  logAppend: true
+  logRotate: rename
+  path: {{ mongodb_data_dir }}/configserver/log/configserver.log

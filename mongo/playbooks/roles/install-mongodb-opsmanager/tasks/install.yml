@@ -1,0 +1,11 @@
+--- 
+- 
+  file: "path={{ mongodb_data_dir }}/opsmanager owner=mongodb group=mongodb state=directory"
+  name: "create mongodb opsmanager directory"
+- 
+  file: "path={{ mongodb_data_dir }}/opsmanager/{{ item }} owner=mongodb group=mongodb state=directory"
+  name: "create mongodb configserver subdirectory"
+  with_items: 
+    - log
+    - data
+    - run

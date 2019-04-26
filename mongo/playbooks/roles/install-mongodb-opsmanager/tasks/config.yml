@@ -1,0 +1,4 @@
+--- 
+- 
+  name: "copy opsmanager.conf.j2 to mongodb conf directory"
+  template: "src=opsmanager.conf.j2 dest=/usr/local/mongodb/mongodb-release/conf/opsmanager.conf owner=mongodb group=mongodb mode=664"

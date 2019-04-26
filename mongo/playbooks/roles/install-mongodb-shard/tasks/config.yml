@@ -1,0 +1,4 @@
+--- 
+- 
+  name: "copy shard.conf to mongodb conf directory"
+  template: "src=shard.conf.j2 dest=/usr/local/mongodb/mongodb-release/conf/shard{{ id }}.conf owner=mongodb group=mongodb mode=664"

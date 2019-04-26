@@ -1,0 +1,6 @@
+--- 
+- 
+  hosts: opsmanager 
+  roles: 
+    - install-mongodb-opsmanager
+  user: centos
