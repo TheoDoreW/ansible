@@ -10,3 +10,6 @@
   name: "create redis config directory"
   with_items: 
     - conf
+-
+  name: "copy redis.logrotate.j2 to system logrotate directory"
+  template: "src=redis.logrotate.j2 dest=/etc/logrotate.d/redis owner=root group=root mode=644"
