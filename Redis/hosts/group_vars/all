@@ -6,3 +6,4 @@ redis_file_name: 'redis-4.0.14'
 redis_install_dir: '/usr/local/redis'
 redis_data_dir: '/data1/redis'
 redis_log_dir: '/var/log/redis'
+redis_port: 6379
