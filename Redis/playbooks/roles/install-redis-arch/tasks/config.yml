@@ -5,6 +5,9 @@
 - 
   name: "chkconfig add and disable disable-transparent-hugepages"
   shell: "chkconfig --add disable-transparent-hugepages && /etc/init.d/disable-transparent-hugepages start"
+- 
+  name: "modify os kenerl index"
+  template: "src=redis-overcommit-memory.conf.j2 dest=/etc/sysctl.d/redis-overcommit-memory.conf owner=root group=root mode=644"
 -
   file: "path={{ redis_install_dir }}/redis-release/{{ item }} owner=redis group=redis state=directory"
   name: "create redis config directory"
