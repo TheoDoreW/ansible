@@ -2,5 +2,5 @@
 - 
   hosts: "{{ hosts }}"
   roles: 
-    - install-mongodb-shard
-  user: centos
+    - install-redis-shard
+  user: azureuser

@@ -1,5 +1,5 @@
 ---
 - hosts: redis
-  user: centos
+  user: azureuser
   roles:
     - install-redis-arch
