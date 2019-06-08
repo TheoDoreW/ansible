@@ -2,4 +2,4 @@
 - hosts: redis
   user: centos
   roles:
-    - install-redis-arch-ai
+    - install-redis-arch

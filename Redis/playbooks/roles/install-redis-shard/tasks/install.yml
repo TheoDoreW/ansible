@@ -1,0 +1,7 @@
+--- 
+- 
+  file: "path={{ redis_log_dir }} owner=redis group=redis state=directory"
+  name: "create redis log directory" 
+- 
+  file: "path={{ redis_data_dir }}/redis{{ port }} owner=redis group=redis state=directory"
+  name: "create redis shard directory"

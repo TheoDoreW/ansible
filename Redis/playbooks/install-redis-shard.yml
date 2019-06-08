@@ -1,0 +1,6 @@
+--- 
+- 
+  hosts: "{{ hosts }}"
+  roles: 
+    - install-mongodb-shard
+  user: centos

@@ -1,0 +1,4 @@
+--- 
+- 
+  name: "copy redis{{ port }}.conf to redis conf directory"
+  template: "src=redis.conf.j2 dest={{ redis_install_dir }}/redis-release/conf/redis{{ port }}.conf owner=redis group=redis mode=664"
