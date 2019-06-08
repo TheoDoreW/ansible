@@ -1,0 +1,32 @@
+--- 
+- 
+  name: "install epel yum repos"
+  yum: "name=epel-release state=present"
+- 
+  group: "name=redis gid=3001 state=present"
+  name: "add redis group"
+- 
+  name: "add redis user"
+  user: "name={{ item.name }} group=redis uid={{ item.uid }} shell=/bin/bash state=present"
+  with_items: 
+    - 
+      name: redis
+      uid: "3001"
+- 
+  name: "copy redis_env.sh"
+  template: "src=redis_env.sh.j2 dest=/etc/profile.d/redis_env.sh owner=root group=root mode=644"
+- 
+  file: "path={{ redis_install_dir }} owner=root group=root state=directory"
+  name: "create redis work directory"
+- 
+  name: "download and untar redis tarball"
+  unarchive: "src={{ redis_download_url }} dest={{ redis_install_dir }} copy=no owner=redis group=redis"
+- 
+  file: "src={{ redis_install_dir }}/{{ redis_file_name }} dest={{ redis_install_dir }}/redis-release owner=root group=root state=link"
+  name: "softlink redis work directory"
+- 
+  file: "path={{ redis_install_dir }}/{{ redis_file_name }} owner=redis group=redis recurse=yes state=directory"
+  name: "chown redis work directory"
+-
+  file: "path={{ redis_data_dir }} owner=redis group=redis state=directory"
+  name: "create redis data directory"

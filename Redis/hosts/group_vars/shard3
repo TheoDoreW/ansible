@@ -1,0 +1,4 @@
+---
+# file: group_vars/redis-shard3
+
+port: 6381

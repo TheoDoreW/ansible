@@ -1,0 +1,7 @@
+---
+# file: group_vars/all
+
+redis_download_url: 'http://download.redis.io/releases/redis-4.0.14.tar.gz'
+redis_file_name: 'redis-4.0.14.tar.gz'
+redis_install_dir: '/usr/local/redis'
+redis_data_dir: '/data1/redis'

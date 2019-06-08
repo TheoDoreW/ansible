@@ -1,0 +1,12 @@
+--- 
+- 
+  name: "copy disable-transparent-hugepages to /etc/init.d"
+  template: "src=disable-transparent-hugepages.j2 dest=/etc/init.d/disable-transparent-hugepages owner=root group=root mode=755"
+- 
+  name: "chkconfig add and disable disable-transparent-hugepages"
+  shell: "chkconfig --add disable-transparent-hugepages && /etc/init.d/disable-transparent-hugepages start"
+-
+  file: "path={{ redis_data_dir }}/redis-release/{{ item }} owner=redis group=redis state=directory"
+  name: "create redis config directory"
+  with_items: 
+    - conf
