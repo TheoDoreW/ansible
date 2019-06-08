@@ -2,5 +2,5 @@
 - hosts: "{{ hosts }}" 
   user: azureuser
   tasks:
-  - name: stop redis shard{{ id }}
-    shell: sudo su - redis -c "kill $(ps aux |grep redis |grep -v grep |grep {{ port }} |awk '{print $2}')"
+  - name: stop redis shard
+    shell: sudo su - redis -c "kill $(ps aux |grep redis |grep -v grep |grep {{ redis_port }} |awk '{print $2}')"

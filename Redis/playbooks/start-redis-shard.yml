@@ -3,4 +3,4 @@
   user: azureuser
   tasks:
   - name: start redis shard
-    shell: sudo su - redis -c "redis-server {{ redis_install_dir }}/redis-release/conf/redis{{ port }}.conf"
+    shell: sudo su - redis -c "redis-server {{ redis_install_dir }}/redis-release/conf/redis{{ redis_port }}.conf"
