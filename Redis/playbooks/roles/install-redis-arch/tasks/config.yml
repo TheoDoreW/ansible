@@ -6,7 +6,7 @@
   name: "chkconfig add and disable disable-transparent-hugepages"
   shell: "chkconfig --add disable-transparent-hugepages && /etc/init.d/disable-transparent-hugepages start"
 -
-  file: "path={{ redis_data_dir }}/redis-release/{{ item }} owner=redis group=redis state=directory"
+  file: "path={{ redis_install_dir }}/redis-release/{{ item }} owner=redis group=redis state=directory"
   name: "create redis config directory"
   with_items: 
     - conf
