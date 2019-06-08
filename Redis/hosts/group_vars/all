@@ -2,7 +2,7 @@
 # file: group_vars/all
 
 redis_download_url: 'http://10.14.193.254/database/redis/redis-4.0.14-aftercomplier.tar.gz'
-redis_file_name: 'redis-4.0.14.tar.gz'
+redis_file_name: 'redis-4.0.14'
 redis_install_dir: '/usr/local/redis'
 redis_data_dir: '/data1/redis'
 redis_log_dir: '/var/log/redis'
