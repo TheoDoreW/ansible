@@ -2,4 +2,4 @@
 - hosts: mongodb
   user: centos
   roles:
-    - install-mongodb-arch-ai
+    - install-mongodb-arch
