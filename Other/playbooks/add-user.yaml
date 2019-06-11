@@ -1,6 +1,6 @@
 ---
 - hosts: "{{ hosts }}" 
-  user: centos
+  user: azureuser
   tasks:
   - 
     name: "add user groups"
@@ -9,7 +9,7 @@
       - 
         gid: "550"
         gname: www
-        - 
+      - 
         gid: "551"
         gname: mongod
       - 
