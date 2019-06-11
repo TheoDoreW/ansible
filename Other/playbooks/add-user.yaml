@@ -29,15 +29,13 @@
         gname: linxuzhou
   -   
     name: "create users and add into groups"
-    user: "name={{ item.name }} groups={{ item.groups }} uid={{ item.uid }} shell=/bin/bash state=present"
+    user: "name={{ item.name }} groups={{ item.groups }} uid={{ item.uid }} shell=/bin/bash state=present append=yes"
     with_items: 
       - 
-        append: yes
         groups: www
         name: www
         uid: 550
       - 
-        append: yes
         groups: mongod
         name: mongod
         uid: 551
