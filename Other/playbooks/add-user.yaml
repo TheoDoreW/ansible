@@ -7,25 +7,25 @@
     group: "name={{ item.gname }} gid={{ item.gid }} state=present"
     with_items: 
       - 
-        gid: "550"
+        gid: 550
         gname: www
       - 
-        gid: "551"
+        gid: 551
         gname: mongod
       - 
-        gid: "600"
+        gid: 600
         gname: sudo
       - 
-        gid: "560"
+        gid: 560
         gname: liangjixin
       - 
-        gid: "561"
+        gid: 561
         gname: fengzhibin
       -
-        gid: "562"
+        gid: 562
         gname: chenxuanxin
       - 
-        gid: "563"
+        gid: 563
         gname: linxuzhou
   -   
     name: "create users and add into groups"
@@ -35,25 +35,25 @@
         append: yes
         groups: www
         name: www
-        uid: "550"
+        uid: 550
       - 
         append: yes
         groups: mongod
         name: mongod
-        uid: "551"
+        uid: 551
       - 
-        groups: "liangjixin,sudo"
+        groups: liangjixin,sudo
         name: liangjixin
-        uid: "560"
+        uid: 560
       - 
-        groups: "fengzhibin,sudo"
+        groups: fengzhibin,sudo
         name: fengzhibin
-        uid: "561"
+        uid: 561
       - 
-        groups: "chenxuanxin,sudo"
+        groups: chenxuanxin,sudo
         name: chenxuanxin
-        uid: "562"
+        uid: 562
       - 
-        groups: "linxuzhou,sudo"
+        groups: linxuzhou,sudo
         name: linxuzhou
-        uid: "564"
+        uid: 564
