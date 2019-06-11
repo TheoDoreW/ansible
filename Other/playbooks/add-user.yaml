@@ -42,18 +42,18 @@
         name: mongod
         uid: "551"
       - 
-        group: "liangjixin,sudo"
+        groups: "liangjixin,sudo"
         name: liangjixin
         uid: "560"
       - 
-        group: "fengzhibin,sudo"
+        groups: "fengzhibin,sudo"
         name: fengzhibin
         uid: "561"
       - 
-        group: "chenxuanxin,sudo"
+        groups: "chenxuanxin,sudo"
         name: chenxuanxin
         uid: "562"
       - 
-        group: "linxuzhou,sudo"
+        groups: "linxuzhou,sudo"
         name: linxuzhou
         uid: "563"
