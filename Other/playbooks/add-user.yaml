@@ -4,7 +4,7 @@
   tasks:
   - 
     name: "add user groups"
-    group: "name={{ item.gname }} gid={{ item.gid }} shell=/bin/bash state=present"
+    group: "name={{ item.gname }} gid={{ item.gid }} state=present"
     with_items: 
       - 
         gid: "550"
