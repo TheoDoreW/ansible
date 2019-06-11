@@ -1,0 +1,56 @@
+--- 
+- 
+  name: "add user groups"
+  user: "name={{ item.gname }} gid={{ item.gid }} shell=/bin/bash state=present"
+  with_items: 
+    - 
+      gid: "550"
+      gname: www
+    - 
+      gid: "551"
+      gname: mongod
+    - 
+      gid: "600"
+      gname: sudo
+    - 
+      gid: "560"
+      gname: liangjixin
+    - 
+      gid: "561"
+      gname: fengzhibin
+    - 
+      gid: "562"
+      gname: chenxuanxin
+    - 
+      gid: "563"
+      gname: linxuzhou
+- 
+  name: "add users"
+  user: "name={{ item.name }} group={{ item.group }} uid={{ item.uid }} shell=/bin/bash state=present"
+  with_items: 
+    - 
+      append: yes
+      group: www
+      name: www
+      uid: "550"
+    - 
+      append: yes
+      group: mongod
+      name: mongod
+      uid: "551"
+    - 
+      group: "liangjixin,sudo"
+      name: liangjixin
+      uid: "560"
+    - 
+      group: "fengzhibin,sudo"
+      name: fengzhibin
+      uid: "561"
+    - 
+      group: "chenxuanxin,sudo"
+      name: chenxuanxin
+      uid: "562"
+    - 
+      group: "linxuzhou,sudo"
+      name: linxuzhou
+      uid: "563"
