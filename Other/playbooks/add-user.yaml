@@ -56,5 +56,4 @@
       - 
         groups: "linxuzhou,sudo"
         name: linxuzhou
-        uid: "563"
-        
+        uid: "564"
