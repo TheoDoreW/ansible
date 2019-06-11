@@ -3,7 +3,7 @@
   user: azureuser
   tasks:
   - 
-    name: "add user groups"
+    name: "create user groups"
     group: "name={{ item.gname }} gid={{ item.gid }} state=present"
     with_items: 
       - 
@@ -28,17 +28,17 @@
         gid: "563"
         gname: linxuzhou
   -   
-    name: "add users"
-    user: "name={{ item.name }} group={{ item.group }} uid={{ item.uid }} shell=/bin/bash state=present"
+    name: "create users and add into groups"
+    user: "name={{ item.name }} groups={{ item.groups }} uid={{ item.uid }} shell=/bin/bash state=present"
     with_items: 
       - 
         append: yes
-        group: www
+        groups: www
         name: www
         uid: "550"
       - 
         append: yes
-        group: mongod
+        groups: mongod
         name: mongod
         uid: "551"
       - 
@@ -57,3 +57,4 @@
         groups: "linxuzhou,sudo"
         name: linxuzhou
         uid: "563"
+        
