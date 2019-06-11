@@ -29,29 +29,36 @@
         gname: linxuzhou
   -   
     name: "create users and add into groups"
-    user: "name={{ item.name }} groups={{ item.groups }} uid={{ item.uid }} shell=/bin/bash state=present append=yes"
+    user: "name={{ item.name }} group={{ item.group }} groups={{ item.groups }} uid={{ item.uid }} shell=/bin/bash state=present append=yes"
     with_items: 
       - 
+        group: www
         groups: www
         name: www
         uid: 550
       - 
+        group: mongod
         groups: mongod
         name: mongod
         uid: 551
       - 
-        groups: liangjixin,sudo
+        group: liangjixin
+        groups: sudo
         name: liangjixin
         uid: 560
       - 
-        groups: fengzhibin,sudo
+        group: fengzhibin
+        groups: sudo
         name: fengzhibin
         uid: 561
       - 
-        groups: chenxuanxin,sudo
+        group: chenxuanxin
+        groups: sudo
         name: chenxuanxin
         uid: 562
       - 
-        groups: linxuzhou,sudo
+        group: linxuzhou
+        groups: sudo
         name: linxuzhou
         uid: 564
+
