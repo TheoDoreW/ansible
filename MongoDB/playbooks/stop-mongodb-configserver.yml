@@ -1,6 +1,8 @@
 ---
-- hosts: configserver
+-
+  hosts: configserver
   user: centos
   tasks:
-  - name: stop mongodb configserver
-    shell: sudo su - mongodb -c "kill $(ps aux |grep configserve[r] |awk '{print $2}')"
+    -
+      name: 'stop mongodb configserver'
+      shell: 'sudo su - mongodb -c "kill $(ps aux |grep configserve[r] |awk ''{print $2}'')"'
