@@ -32,13 +32,13 @@
       user: "name={{ item.name }} group={{ item.group }} groups={{ item.groups }} uid={{ item.uid }} shell=/bin/bash state=present"
       with_items: 
         - 
-          append: yes
+          append: true
           group: www
           groups: www
           name: www
           uid: 550
         - 
-          append: yes
+          append: true
           group: mongod
           groups: mongod
           name: mongod
