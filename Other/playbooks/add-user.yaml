@@ -62,5 +62,5 @@
           group: linxuzhou
           groups: sudo
           name: linxuzhou
-          uid: 564
+          uid: 563
   user: azureuser
