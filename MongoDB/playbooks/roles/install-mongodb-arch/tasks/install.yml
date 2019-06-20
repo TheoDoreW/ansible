@@ -28,5 +28,5 @@
   file: "path={{ mongodb_install_dir }}/{{ mongodb_file_name }} owner=mongodb group=mongodb recurse=yes state=directory"
   name: "chown mongodb work directory"
 -
-  file: "path={{ mongodb_install_dir }} owner=mongodb group=mongodb state=directory"
+  file: "path={{ mongodb_data_dir }} owner=mongodb group=mongodb state=directory"
   name: "create mongodb data directory"

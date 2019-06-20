@@ -6,7 +6,7 @@
   name: "chkconfig add and disable disable-transparent-hugepages"
   shell: "chkconfig --add disable-transparent-hugepages && /etc/init.d/disable-transparent-hugepages start"
 -
-  file: "path={{ mongodb_data_dir }}/mongodb-release/{{ item }} owner=mongodb group=mongodb state=directory"
+  file: "path={{ mongodb_install_dir }}/mongodb-release/{{ item }} owner=mongodb group=mongodb state=directory"
   name: "create mongodb config directory"
   with_items: 
     - conf
