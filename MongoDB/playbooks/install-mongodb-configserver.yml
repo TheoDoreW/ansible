@@ -3,4 +3,4 @@
   hosts: configserver
   roles: 
     - install-mongodb-configserver
-  user: centos
+  user: azureuser

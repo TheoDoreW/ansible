@@ -3,4 +3,4 @@
   hosts: mongos
   roles: 
     - install-mongodb-mongos
-  user: centos
+  user: azureuser

@@ -1,5 +1,5 @@
 ---
 - hosts: mongodb
-  user: centos
+  user: azureuser
   roles:
     - install-mongodb-arch

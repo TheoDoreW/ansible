@@ -1,7 +1,7 @@
 ---
 -
   hosts: configserver
-  user: centos
+  user: azureuser
   tasks:
     -
       name: 'stop mongodb configserver'

@@ -1,6 +1,6 @@
 ---
 - hosts: mongos
-  user: centos
+  user: azureuser
   tasks:
   - name: start mongodb mongos
     shell: sudo su - mongodb -c "mongos -f {{ mongodb_install_dir }}/mongodb-release/conf/mongos.conf"

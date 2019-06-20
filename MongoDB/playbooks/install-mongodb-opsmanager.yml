@@ -3,4 +3,4 @@
   hosts: opsmanager 
   roles: 
     - install-mongodb-opsmanager
-  user: centos
+  user: azureuser
