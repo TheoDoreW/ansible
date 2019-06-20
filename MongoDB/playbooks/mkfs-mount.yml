@@ -20,7 +20,7 @@
     - 
       mount: 
         fstype: xfs
-        opts: "default,nofail"
+        opts: "defaults,nofail"
         path: "{{ item.0 }}"
         src: "{{ item.1 }}"
         state: mounted
