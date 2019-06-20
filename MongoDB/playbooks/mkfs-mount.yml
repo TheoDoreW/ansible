@@ -1,6 +1,6 @@
 --- 
 - 
-  hosts: mongodb
+  hosts: mongodbshard
   remote_user: azureuser
   tasks: 
     - 
