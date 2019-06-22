@@ -1,6 +1,7 @@
 #Returns a list of monitorable processes in Zabbix LLD JSON format
-UserParameter=ps.discovery,echo "{\n \"data\":[" ; /bin/ps --no-headers caux | /usr/bin/awk '{ print " { \"{#PSUSER}\":\"" $1 "\", \"{#PSNAME}\":\"" $11 "\" },"}' | /bin/sort | /usr/bin/uniq | /bin/sed -e 's/\//\\\//g' -e '$s/.$//' ; echo " ]\n}"
 {% raw %}
+UserParameter=ps.discovery,echo "{\n \"data\":[" ; /bin/ps --no-headers caux | /usr/bin/awk '{ print " { \"{#PSUSER}\":\"" $1 "\", \"{#PSNAME}\":\"" $11 "\" },"}' | /bin/sort | /usr/bin/uniq | /bin/sed -e 's/\//\\\//g' -e '$s/.$//' ; echo " ]\n}"
+
 # Calculates CPU usage over multiple process threads
 UserParameter=proc.cpu[*],TOTAL=0; for PROC in `/bin/ps u -C $1 | /bin/grep -e '^$2' | /usr/bin/awk '{ print $$3 }'`; do TOTAL=`echo "$TOTAL $PROC" | /usr/bin/awk '{print $$1 + $$2}'` ; done; echo $TOTAL
 
