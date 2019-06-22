@@ -10,6 +10,7 @@ diskname_discovery () {
     [ "${HardDisk[0]}" == "" ] && exit
     printf '{\n'
     printf '\t"data":[\n'
+    {% raw %}
     for((i=0;i<${#HardDisk[@]};++i))
     {
         num=$(echo $((${#HardDisk[@]}-1)))
@@ -32,3 +33,4 @@ diskname_discovery)
     echo "Usage: $0 {diskname_discovery}"
     ;;
 esac
+{% endraw %}

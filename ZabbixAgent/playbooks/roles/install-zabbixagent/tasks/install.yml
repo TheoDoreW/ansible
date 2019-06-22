@@ -1,6 +1,8 @@
 --- 
 - 
   name: "yum install zabbix agent"
-  with_items: 
-    - "http://10.14.193.254/zabbix/zabbix-agent-4.0.9-3.el7.x86_64.rpm http://10.14.193.254/zabbix/zabbix-sender-4.0.9-3.el7.x86_64.rpm"
-  yum: "name={{ item }} state=present"
+  yum: 
+    name: 
+      - "http://10.14.193.254/zabbix/zabbix-agent-4.0.9-3.el7.x86_64.rpm"
+      - "http://10.14.193.254/zabbix/zabbix-sender-4.0.9-3.el7.x86_64.rpm"
+    state: present
