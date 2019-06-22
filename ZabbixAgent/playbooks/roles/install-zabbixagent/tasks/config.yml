@@ -1,0 +1,26 @@
+--- 
+- 
+  name: "copy zabbix_agentd.conf to /etc/zabbix/"
+  template: "src=zabbix_agentd.conf.j2 dest=/etc/zabbix/zabbix_agentd.conf owner=root group=zabbix mode=644"
+- 
+  name: "copy userparameter.conf to /etc/zabbix/zabbix_agentd.d"
+  template: "src={{ item }}.j2 dest=/etc/zabbix/zabbix_agentd.d/{{ item }} owner=root group=zabbix mode=755"
+  with_items: 
+    - userparameter_harddisk.conf
+    - userparameter_linux_process.conf
+    - userparameter_nginx.conf
+    - userparameter_phpfpm.conf
+    - userparameter_runtime.conf
+    - userparameter_tcp_connect.conf
+- 
+  file: "path=/etc/zabbix/scripts owner=root group=zabbix state=directory"
+  name: "create zabbix agent scripts directory"
+- 
+  name: "copy zabbix user shell scritps /etc/zabbix/scripts"
+  template: "src={{ item }}.j2 dest=/etc/zabbix/scripts/{{ item }} owner=root group=zabbix mode=755"
+  with_items: 
+    - check_harddisk.sh
+    - check_nginx_status.sh
+    - check_phpfpm.sh
+    - check_ps_runtime.sh
+    - check_runtime.sh

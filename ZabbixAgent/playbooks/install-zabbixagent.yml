@@ -1,0 +1,5 @@
+---
+- hosts: zabbixagent
+  user: azureuser
+  roles:
+    - install-zabbixagent

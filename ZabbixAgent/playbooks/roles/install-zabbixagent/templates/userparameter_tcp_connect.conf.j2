@@ -1,0 +1,19 @@
+#LISTEN，SYN-SENT，SYN-RECEIVED，ESTABLISHED，FIN-WAIT-1，FIN-WAIT-2，CLOSE-WAIT，CLOSING，LAST-ACK，TIME-WAIT和 CLOSED
+UserParameter=socket.tcp_listen,     grep -c  "\b 0A \b" /proc/net/tcp
+UserParameter=socket.tcp_synsent,    grep -c  "\b 02 \b" /proc/net/tcp
+UserParameter=socket.tcp_synrecv,    grep -c  "\b 03 \b" /proc/net/tcp
+UserParameter=socket.tcp_established,grep -c  "\b 01 \b" /proc/net/tcp
+UserParameter=socket.tcp_finwait1,   grep -c  "\b 04 \b" /proc/net/tcp
+UserParameter=socket.tcp_finwait2,   grep -c  "\b 05 \b" /proc/net/tcp
+UserParameter=socket.tcp.closewait,  grep -c  "\b 08 \b" /proc/net/tcp
+UserParameter=socket.tcp_closing,    grep -c  "\b 0B \b" /proc/net/tcp
+UserParameter=socket.tcp_lastack,    grep -c  "\b 09 \b" /proc/net/tcp
+UserParameter=socket.tcp_timewait,   grep -c  "\b 06 \b" /proc/net/tcp
+UserParameter=socket.tcp_closed,     grep -c  "\b 07 \b" /proc/net/tcp
+
+#TCP sockets
+UserParameter=socket.total_sockets,  awk '/sockets:/ {print $3}' /proc/net/sockstat
+UserParameter=socket.tcp_inuse,      awk '/TCP:/ {print $3}'     /proc/net/sockstat
+UserParameter=socket.tcp_orphan,     awk '/TCP:/ {print $5}'     /proc/net/sockstat
+UserParameter=socket.tcp_alloc,      awk '/TCP:/ {print $9}'     /proc/net/sockstat
+UserParameter=socket.udp_inuse,      awk '/UDP:/ {print $3}'     /proc/net/sockstat

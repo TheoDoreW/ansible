@@ -1,0 +1,57 @@
+#!/bin/bash
+#
+function pidtime {
+ps -eo pid,ppid,comm,lstart,etime|grep $1|head -1|awk '{print $NF}'|grep - >/dev/null 2>&1
+if [ $? -eq 0 ];then
+	echo 1000
+else
+time=`ps -eo pid,ppid,comm,lstart,etime|grep $1|head -1|awk '{print $NF}'`
+field=`ps -eo pid,ppid,comm,lstart,etime|grep $1|head -1|awk '{print $NF}'|awk -F':' '{print NF}'`
+if [ $field -eq 3 ];then
+		H=`echo $time|awk -F':' '{print $1}'`
+		M=`echo $time|awk -F':' '{print $2}'`
+		S=`echo $time|awk -F':' '{print $3}'`
+                M1=`expr $H \* 60`
+                M2=$M
+                RTIME=`expr $M1 + $M2`
+                echo $RTIME
+	else
+		RTIME=`echo $time|awk -F':' '{print $1}'`
+                echo $RTIME
+fi	
+fi
+}
+
+function ppidtime {
+ps -eo pid,ppid,comm,lstart,etime|grep $1|awk '$2==1{print $NF}'|grep - >/dev/null 2>&1
+if [ $? -eq 0 ];then
+        echo 1000
+else
+time=`ps -eo pid,ppid,comm,lstart,etime|grep $1|awk '$2==1{print $NF}'`
+field=`ps -eo pid,ppid,comm,lstart,etime|grep $1|awk '$2==1{print $NF}'|awk -F':' '{print NF}'`
+if [ $field -eq 3 ];then
+                H=`echo $time|awk -F':' '{print $1}'`
+                M=`echo $time|awk -F':' '{print $2}'`
+                S=`echo $time|awk -F':' '{print $3}'`
+                M1=`expr $H \* 60`
+                M2=$M
+                RTIME=`expr $M1 + $M2`
+                echo $RTIME
+        else
+                RTIME=`echo $time|awk -F':' '{print $1}'`
+                echo $RTIME
+fi
+fi
+}
+
+case "$1" in
+pidtime)
+    pidtime $2
+    ;;
+ppidtime)
+    ppidtime $2
+    ;;
+*)
+    echo "Usage: $0 {pidtime|ppidtime}"
+    ;;
+esac
