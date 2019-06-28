@@ -4,3 +4,7 @@
 zabbixserver_ip: '10.14.194.25'
 zabbixserver_port: '10051'
 
+# redis
+rediscli_path: '/usr/local/redis/redis-release/bin/redis-cli'
+redis_port: '6379'
+

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-REDISPATH="/usr/local/redis/redis-release/bin/redis-cli"
+REDISPATH="{{ rediscli_path }}"
 HOST="{{ ansible_eth0.ipv4.address }}"
 PORT="{{ redis_port }}"
 REDIS_INFO="$REDISPATH -h $HOST -p $PORT info"
