@@ -2,4 +2,5 @@
 # file: group_vars/all
 
 zabbixserver_ip: '10.14.194.25'
+zabbixserver_port: '10051'
 

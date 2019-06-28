@@ -12,6 +12,7 @@
     - userparameter_phpfpm.conf
     - userparameter_runtime.conf
     - userparameter_tcp_connect.conf
+    - userparameter_redis.conf
 - 
   file: "path=/etc/zabbix/scripts owner=root group=zabbix state=directory"
   name: "create zabbix agent scripts directory"
@@ -24,3 +25,4 @@
     - check_phpfpm.sh
     - check_ps_runtime.sh
     - check_runtime.sh
+    - check_redis_stats.py
