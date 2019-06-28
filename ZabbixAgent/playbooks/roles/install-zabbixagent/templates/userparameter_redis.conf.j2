@@ -1,11 +1,5 @@
-# Redis
-#
-# This content is licensed GNU GPL v2
-# Author: Alexey Dubkov <alexey.dubkov@gmail.com>
-#
+#监控redis状态，我们可以根据这个参数对应的监控项创建redis状态触发器。
+#redis monitor
 
-# Discovery
-UserParameter=redis.discovery,/etc/zabbix/scripts/check_redis_stats.py localhost list_key_space_db
-
-# Return Redis statistics
-UserParameter=redis[*],/etc/zabbix/scripts/check_redis_stats.py $1 $2 $3
+UserParameter=redis.status,{{ rediscli_path }} -h {{ ansible_eth0.ipv4.address }} -p {{ redis_port }} ping |grep -c PONG 
+UserParameter=redis_info[*],/etc/zabbix/scripts/check_redis_stats.sh $1
