@@ -2,4 +2,4 @@
 #redis monitor
 
 UserParameter=redis.status,{{ rediscli_path }} -h {{ ansible_eth0.ipv4.address }} -p {{ redis_port }} ping |grep -c PONG 
-UserParameter=redis_info[*],/etc/zabbix/scripts/check_redis_stats.sh $1
+UserParameter=redis_info[*],/etc/zabbix/scripts/check_redis_stats.sh $1 $2
