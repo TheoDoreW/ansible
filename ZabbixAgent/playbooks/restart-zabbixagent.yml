@@ -1,0 +1,12 @@
+--- 
+- 
+  hosts: zabbixagent
+  tasks: 
+    - 
+      name: "start zabbixagent"
+      systemd: 
+        daemon_reload: true
+        enabled: true
+        name: zabbix-agent
+        state: restarted
+  user: azureuser
