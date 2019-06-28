@@ -25,4 +25,4 @@
     - check_phpfpm.sh
     - check_ps_runtime.sh
     - check_runtime.sh
-    - check_redis_stats.py
+    - check_redis_stats.sh
