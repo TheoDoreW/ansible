@@ -5,7 +5,6 @@ xinshengw.partner.onmschina.cn\mslavduser1
 Microsoft2024
 
 admin@xinshengw.partner.onmschina.cn
-XinXin15@912
 
 
 New-Item -ItemType Directory -Path "C:\Temp" -Force

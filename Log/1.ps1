@@ -46,22 +46,13 @@ $Params = @{
      "ResourceGroupName"             = "mslavdrg"
      "Location"                      = "chinanorth3"
      "UseARMAPI"                     = $true
-     "HostPoolName"                  = $WVDHostPool.Name
-     "HostPoolResourceGroupName"     = $WVDHostPool.ResourceGroupName           # Optional. Default: same as ResourceGroupName param value
-     "LogAnalyticsWorkspaceId"       = $LogAnalyticsWorkspaceId                 # Optional. If not specified, script will not log to the Log Analytics
-     "LogAnalyticsPrimaryKey"        = $LogAnalyticsPrimaryKey                  # Optional. If not specified, script will not log to the Log Analytics
-     "RecurrenceInterval"            = $RecurrenceInterval                      # Optional. Default: 15
-     "BeginPeakTime"                 = $BeginPeakTime                           # Optional. Default: "09:00"
-     "EndPeakTime"                   = $EndPeakTime                             # Optional. Default: "17:00"
-     "TimeDifference"                = $TimeDifference                          # Optional. Default: "-7:00"
-     "SessionThresholdPerCPU"        = $SessionThresholdPerCPU                  # Optional. Default: 1
-     "MinimumNumberOfRDSH"           = $MinimumNumberOfRDSH                     # Optional. Default: 1
-     "MaintenanceTagName"            = $MaintenanceTagName                      # Optional.
-     "LimitSecondsToForceLogOffUser" = $LimitSecondsToForceLogOffUser           # Optional. Default: 1
-     "LogOffMessageTitle"            = $LogOffMessageTitle                      # Optional. Default: "Machine is about to shutdown."
-     "LogOffMessageBody"             = $LogOffMessageBody                       # Optional. Default: "Your session will be logged off. Please save and close everything."
-     "WebhookURI"                    = "WebhookURIARMBased"
-
+     "HostPoolName"                  = "mslavdhp1"
+     "HostPoolResourceGroupName"     = "mslavdrg"
+     "RecurrenceInterval"            = "1"
+     "BeginPeakTime"                 = "00:00"
+     "EndPeakTime"                   = "23:59"
+     "TimeDifference"                = "+8:00"
+     "WebhookURI"                    = "https://a8f48ec3-aec5-42de-b320-815ee490b0bb.webhook.cnn3.azure-automation.cn/webhooks?token=IONkEIL2buvBpJO6Uwixzf9DqrbpkUDYw%2fLbrvsvjfA%3d"
 }
 
 .\CreateOrUpdateAzLogicApp.ps1 @Params
