@@ -128,3 +128,4 @@ $Params = @{
 }
 
 .\CreateOrUpdateAzLogicApp.ps1 @Params
+
