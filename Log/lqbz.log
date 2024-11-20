@@ -2,7 +2,7 @@
 msladmin@xinshengw.partner.onmschina.cn
 xinshengw.partner.onmschina.cn\msladmin
 xinshengw.partner.onmschina.cn\mslavduser1
-Microsoft2024
+
 
 admin@xinshengw.partner.onmschina.cn
 
@@ -61,7 +61,6 @@ $LogOffMessageBody = Read-Host -Prompt "Enter the body of the message sent to th
 $WebhookURI = Read-Host -Prompt "Enter the webhook URI that has already been generated for this Azure Automation account. The URI is stored as encrypted in the above Automation Account variable. To retrieve the value, see https://learn.microsoft.com/azure/automation/shared-resources/variables?tabs=azure-powershell#powershell-cmdlets-to-access-variables"
 
 
-eyJhbGciOiJSUzI1NiIsImtpZCI6IjRDODk4NkNGMURBOUFFMDFCQjFDRTg2NTcyQTc1RUUzNjY1MERBOTAiLCJ0eXAiOiJKV1QifQ.eyJSZWdpc3RyYXRpb25JZCI6ImY5ZTEwMTE0LTMxZjctNGE0MS05NjVhLTMxYWQ5Yjk5MWY4MSIsIkJyb2tlclVyaSI6Imh0dHBzOi8vcmRicm9rZXItZy1jbi1yMS53dmQuYXp1cmUuY24vIiwiRGlhZ25vc3RpY3NVcmkiOiJodHRwczovL3JkZGlhZ25vc3RpY3MtZy1jbi1yMS53dmQuYXp1cmUuY24vIiwiRW5kcG9pbnRQb29sSWQiOiJmZmZkNmRkYS02YzJiLTRjYjItOGQxNy0wY2RjZmRiZTEwZjQiLCJHbG9iYWxCcm9rZXJVcmkiOiJodHRwczovL3JkYnJva2VyLnd2ZC5henVyZS5jbi8iLCJHZW9ncmFwaHkiOiJDTiIsIkdsb2JhbEJyb2tlclJlc291cmNlSWRVcmkiOiJodHRwczovL2ZmZmQ2ZGRhLTZjMmItNGNiMi04ZDE3LTBjZGNmZGJlMTBmNC5yZGJyb2tlci53dmQuYXp1cmUuY24vIiwiQnJva2VyUmVzb3VyY2VJZFVyaSI6Imh0dHBzOi8vZmZmZDZkZGEtNmMyYi00Y2IyLThkMTctMGNkY2ZkYmUxMGY0LnJkYnJva2VyLWctY24tcjEud3ZkLmF6dXJlLmNuLyIsIkRpYWdub3N0aWNzUmVzb3VyY2VJZFVyaSI6Imh0dHBzOi8vZmZmZDZkZGEtNmMyYi00Y2IyLThkMTctMGNkY2ZkYmUxMGY0LnJkZGlhZ25vc3RpY3MtZy1jbi1yMS53dmQuYXp1cmUuY24vIiwiQUFEVGVuYW50SWQiOiI3MWFkZWU1ZC03YjRiLTRlNDctODgxNC1hZGUyYTk4NGE1NDMiLCJuYmYiOjE3MjUxNjYxMzYsImV4cCI6MTcyNTg5NzYwMCwiaXNzIjoiUkRJbmZyYVRva2VuTWFuYWdlciIsImF1ZCI6IlJEbWkifQ.J-icwYFF5SLH_SSWzIAcJcHU1YeJUYP2mwTQepOwDYsUvROAZnOWosZTvAme1KpgeJD3P6GdXn0uJqd4ifLkYbL9mZQB_dT2pTyU91z7UoV8ClMDoZclQNDvtct2VOcZ45KmHgI1D6nrrW4gbxJKjFg54Ht9saNoL7iGgEM-3OnUxJEr3hv09WS3T3gGk6nRgdrZkqrfnAYLxMJRkIojZTHEFk8uzqshCjvmxWe0q7GWK-sC7jLIdWewhwcS9TTzQWAF43hTkzNaVmCoK3Uhj-JIh9ErHqKWYYY6tWO4ayQj3Rv5LkW9oNV9wf4JDzNIdUJb9FJg3SH05UIGhTHCsw
 
 
 Write-Log "Number of user sessions: $nUserSessions of total allowed $($nRunningVMs * $HostPool.MaxSessionLimit)"
@@ -130,11 +129,29 @@ $Params = @{
 .\CreateOrUpdateAzLogicApp.ps1 @Params
 
 Bwang0920
-Xinxin150912
+
 
 
 admin@xinshengw.partner.onmschina.cn
-msadmin
-Microsoft2024
+msadmin@xinshengw.partner.onmschina.cn
+
 
 https://software-static.download.prss.microsoft.com/dbazure/988969d5-f34g-4e03-ac9d-1f9786c66749/22621.1.220506-1250.ni_release_amd64fre_CLIENT_LOF_PACKAGES_OEM.iso
+
+
+
+Desktop Virtualization Power On Off Contributor role
+
+Service principal	Application ID
+Azure Virtual Desktop
+Windows Virtual Desktop 9cdead84-a844-4324-93f2-b2e6bb768d07 eb284803-c1d5-4598-97b9-e87e623de7ff
+
+Azure Virtual Desktop Client
+Windows Virtual Desktop Client a85cf173-4192-42f8-81fa-777a763e6e2c 178d36b2-0831-4ed1-86e1-d93a8235fc7d
+
+Azure Virtual Desktop ARM Provider
+Windows Virtual Desktop ARM Provider 50e95039-b200-4007-bc97-8d5790743a63 bfb4e646-2804-4ca9-ad6d-8da8d20577dc
+
+az role assignment create --assignee "9cdead84-a844-4324-93f2-b2e6bb768d07" --role "Desktop Virtualization Contributor" --scope "/subscriptions/15e95d2e-6cd0-4d1c-96da-b8e055a62ee8"
+az role assignment create --assignee "a85cf173-4192-42f8-81fa-777a763e6e2c" --role "Desktop Virtualization Contributor" --scope "/subscriptions/15e95d2e-6cd0-4d1c-96da-b8e055a62ee8"
+az role assignment create --assignee "50e95039-b200-4007-bc97-8d5790743a63" --role "Desktop Virtualization Contributor" --scope "/subscriptions/15e95d2e-6cd0-4d1c-96da-b8e055a62ee8"
