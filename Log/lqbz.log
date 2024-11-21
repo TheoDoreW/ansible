@@ -142,6 +142,10 @@ https://software-static.download.prss.microsoft.com/dbazure/988969d5-f34g-4e03-a
 
 avduser1@xinshengw.partner.onmschina.cn
 avduser2@xinshengw.partner.onmschina.cn
+avduser3@xinshengw.partner.onmschina.cn
+avduser4@xinshengw.partner.onmschina.cn
+avduser5@xinshengw.partner.onmschina.cn
+avduser6@xinshengw.partner.onmschina.cn
 
 
 
@@ -163,9 +167,12 @@ az role assignment create --assignee "9cdead84-a844-4324-93f2-b2e6bb768d07" --ro
 az role assignment create --assignee "a85cf173-4192-42f8-81fa-777a763e6e2c" --role "Desktop Virtualization Contributor" --scope "/subscriptions/$subId"
 az role assignment create --assignee "50e95039-b200-4007-bc97-8d5790743a63" --role "Desktop Virtualization Contributor" --scope "/subscriptions/$subId"
 
-az role assignment create --assignee "9cdead84-a844-4324-93f2-b2e6bb768d07" --role "Desktop Virtualization Power On Off Contributor role" --scope "/subscriptions/$subId"
-az role assignment create --assignee "a85cf173-4192-42f8-81fa-777a763e6e2c" --role "Desktop Virtualization Power On Off Contributor role" --scope "/subscriptions/$subId"
-az role assignment create --assignee "50e95039-b200-4007-bc97-8d5790743a63" --role "Desktop Virtualization Power On Off Contributor role" --scope "/subscriptions/$subId"
+az role assignment create --assignee "9cdead84-a844-4324-93f2-b2e6bb768d07" --role "Desktop Virtualization Power On Off Contributor" --scope "/subscriptions/$subId"
+az role assignment create --assignee "a85cf173-4192-42f8-81fa-777a763e6e2c" --role "Desktop Virtualization Power On Off Contributor" --scope "/subscriptions/$subId"
+az role assignment create --assignee "50e95039-b200-4007-bc97-8d5790743a63" --role "Desktop Virtualization Power On Off Contributor" --scope "/subscriptions/$subId"
 
 
 echo "xinshengwang  ALL=(ALL) NOPASSWD: ALL" >>/etc/sudoers 
+
+WVDManagement 
+| where UserName == '9cdead84-a844-4324-93f2-b2e6bb768d07' or UserName == 'a85cf173-4192-42f8-81fa-777a763e6e2c' or UserName == '50e95039-b200-4007-bc97-8d5790743a63'
