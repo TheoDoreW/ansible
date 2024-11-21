@@ -144,14 +144,6 @@ avduser1@xinshengw.partner.onmschina.cn
 avduser2@xinshengw.partner.onmschina.cn
 
 
-subId=15e95d2e-6cd0-4d1c-96da-b8e055a62ee8
-az role assignment create --assignee "9cdead84-a844-4324-93f2-b2e6bb768d07" --role "Desktop Virtualization Power On Off Contributor" --scope "/subscriptions/$subId"
-az role assignment create --assignee "a85cf173-4192-42f8-81fa-777a763e6e2c" --role "Desktop Virtualization Power On Off Contributor" --scope "/subscriptions/$subId"
-az role assignment create --assignee "50e95039-b200-4007-bc97-8d5790743a63" --role "Desktop Virtualization Power On Off Contributor" --scope "/subscriptions/$subId"
-
-=======
-
-
 
 Desktop Virtualization Power On Off Contributor role
 
