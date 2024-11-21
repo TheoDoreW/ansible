@@ -134,6 +134,8 @@ Bwang0920
 
 admin@xinshengw.partner.onmschina.cn
 msadmin@xinshengw.partner.onmschina.cn
+avduser1@xinshengw.partner.onmschina.cn
+Microsoft2024
 
 
 https://software-static.download.prss.microsoft.com/dbazure/988969d5-f34g-4e03-ac9d-1f9786c66749/22621.1.220506-1250.ni_release_amd64fre_CLIENT_LOF_PACKAGES_OEM.iso
@@ -163,7 +165,15 @@ Windows Virtual Desktop Client a85cf173-4192-42f8-81fa-777a763e6e2c 178d36b2-083
 Azure Virtual Desktop ARM Provider
 Windows Virtual Desktop ARM Provider 50e95039-b200-4007-bc97-8d5790743a63 bfb4e646-2804-4ca9-ad6d-8da8d20577dc
 
-az role assignment create --assignee "9cdead84-a844-4324-93f2-b2e6bb768d07" --role "Desktop Virtualization Contributor" --scope "/subscriptions/15e95d2e-6cd0-4d1c-96da-b8e055a62ee8"
-az role assignment create --assignee "a85cf173-4192-42f8-81fa-777a763e6e2c" --role "Desktop Virtualization Contributor" --scope "/subscriptions/15e95d2e-6cd0-4d1c-96da-b8e055a62ee8"
-az role assignment create --assignee "50e95039-b200-4007-bc97-8d5790743a63" --role "Desktop Virtualization Contributor" --scope "/subscriptions/15e95d2e-6cd0-4d1c-96da-b8e055a62ee8"
+az account list --output table
+subId=xxxx
+az role assignment create --assignee "9cdead84-a844-4324-93f2-b2e6bb768d07" --role "Desktop Virtualization Contributor" --scope "/subscriptions/$subId"
+az role assignment create --assignee "a85cf173-4192-42f8-81fa-777a763e6e2c" --role "Desktop Virtualization Contributor" --scope "/subscriptions/$subId"
+az role assignment create --assignee "50e95039-b200-4007-bc97-8d5790743a63" --role "Desktop Virtualization Contributor" --scope "/subscriptions/$subId"
 
+az role assignment create --assignee "9cdead84-a844-4324-93f2-b2e6bb768d07" --role "Desktop Virtualization Power On Off Contributor role" --scope "/subscriptions/$subId"
+az role assignment create --assignee "a85cf173-4192-42f8-81fa-777a763e6e2c" --role "Desktop Virtualization Power On Off Contributor role" --scope "/subscriptions/$subId"
+az role assignment create --assignee "50e95039-b200-4007-bc97-8d5790743a63" --role "Desktop Virtualization Power On Off Contributor role" --scope "/subscriptions/$subId"
+
+
+echo "xinshengwang  ALL=(ALL) NOPASSWD: ALL" >>/etc/sudoers 
