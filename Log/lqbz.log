@@ -171,6 +171,39 @@ az role assignment create --assignee "9cdead84-a844-4324-93f2-b2e6bb768d07" --ro
 az role assignment create --assignee "a85cf173-4192-42f8-81fa-777a763e6e2c" --role "Desktop Virtualization Power On Off Contributor" --scope "/subscriptions/$subId"
 az role assignment create --assignee "50e95039-b200-4007-bc97-8d5790743a63" --role "Desktop Virtualization Power On Off Contributor" --scope "/subscriptions/$subId"
 
+developer portal 
+policy
+
+
+<rate-limit calls="number" renewal-period="seconds"  retry-after-header-name="custom header name, replaces default 'Retry-After'" 
+        retry-after-variable-name="policy expression variable name"
+        remaining-calls-header-name="header name"  
+        remaining-calls-variable-name="policy expression variable name"
+        total-calls-header-name="header name">
+    <api name="API name" id="API id" calls="number" renewal-period="seconds" >
+        <operation name="operation name" id="operation id" calls="number" renewal-period="seconds" />
+    </api>
+</rate-limit>
+
+
+redis-cli -p 6379 -h yourcachename.redis.cache.windows.net -a YourAccessKey
+
+redis-cli -p 6379 -h tpredis1.redis.cache.windows.net -a YourAccessKey
+3b59055e-9266-4cbc-be91-425606f460b7
+
+
+Microsoft2024
+
+只开不关，Breadth-first 可以有效保障业务高峰期的需求
+
+
+WVDManagement 
+| where UserName == '9cdead84-a844-4324-93f2-b2e6bb768d07' or UserName == 'a85cf173-4192-42f8-81fa-777a763e6e2c' or UserName == '50e95039-b200-4007-bc97-8d5790743a63'
+
+
+
+
+=======
 
 echo "xinshengwang  ALL=(ALL) NOPASSWD: ALL" >>/etc/sudoers 
 
