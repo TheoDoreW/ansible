@@ -175,15 +175,6 @@ developer portal
 policy
 
 
-<rate-limit calls="number" renewal-period="seconds"  retry-after-header-name="custom header name, replaces default 'Retry-After'" 
-        retry-after-variable-name="policy expression variable name"
-        remaining-calls-header-name="header name"  
-        remaining-calls-variable-name="policy expression variable name"
-        total-calls-header-name="header name">
-    <api name="API name" id="API id" calls="number" renewal-period="seconds" >
-        <operation name="operation name" id="operation id" calls="number" renewal-period="seconds" />
-    </api>
-</rate-limit>
 
 
 redis-cli -p 6380 -h redis0001.redis.cache.windows.net -a--tlss
@@ -209,5 +200,13 @@ WVDManagement
 
 curl 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://redis.azure.com/.default' -H Metadata:true
 
+curl 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://redis.azure.chinacloudapp.cn/.default' -H Metadata:true
+
+https://storage.azure.com/
 
 redis-cli -p 6380 -h yourcachename.redis.cache.windows.net -a YourAccessKey --tls
+
+
+az aks get-credentials --resource-group studyingrg --name aks1
+
+
