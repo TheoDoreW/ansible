@@ -210,3 +210,44 @@ redis-cli -p 6380 -h yourcachename.redis.cache.windows.net -a YourAccessKey --tl
 az aks get-credentials --resource-group studyingrg --name aks1
 
 
+sudo pmset -a sleep 1
+sudo pmset -a hibernatemode 3
+sudo pmset -a disablesleep 0
+
+kubectl get ns
+kubectl config get-contexts
+kubectl config set-context --current --namespace=studying
+
+
+az acr import --name studyingacr1 --source ghcr.io/azure-samples/aks-store-demo/store-front:latest --image store-front:latest
+
+
+
+mcr.microsoft.com/mirror/docker/library/rabbitmq:3.10-management-alpine
+ghcr.io/azure-samples/aks-store-demo/order-service:latest
+ghcr.io/azure-samples/aks-store-demo/product-service:latest
+ghcr.io/azure-samples/aks-store-demo/store-front:latest
+
+
+
+az acr import --name studyingacr1 --source mcr.microsoft.com/mirror/docker/library/rabbitmq:3.10-management-alpine --image rabbitmq:3.10-management-alpine
+az acr import --name studyingacr1 --source ghcr.io/azure-samples/aks-store-demo/order-service:latest --image order-service:latest
+az acr import --name studyingacr1 --source ghcr.io/azure-samples/aks-store-demo/product-service:latest --image product-service:latest
+az acr import --name studyingacr1 --source ghcr.io/azure-samples/aks-store-demo/store-front:latest --image store-front:latest
+
+az acr repository list -n studyingacr1
+
+
+studyingacr1.azurecr.cn/order-service:latest
+studyingacr1.azurecr.cn/product-service:latest
+studyingacr1.azurecr.cn/rabbitmq:3.10-management-alpine
+studyingacr1.azurecr.cn/store-front:latest
+
+az aks nodepool show --resource-group studyingrg --cluster-name aks1 --name agentpool
+
+az aks nodepool update --resource-group studyingrg --cluster-name aks1 --name agentpool --mode user
+
+在测一下off-peak
+& Off-peak
+
+
