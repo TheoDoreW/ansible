@@ -233,7 +233,7 @@ docker pull registry.cn-hangzhou.aliyuncs.com/acr-toolkit/ack-cube:1.0
 
 # Attach using acr-name
 az aks update --name tplinkaks1 --resource-group tplinkrg --attach-acr tplinkacr1 
-az acr import --name tplinkacr1 --source docker.io/library/nginx:latest --image nginx:v1
+az acr import --name tplinkacr1 --source docker.io/library/nginx:latest --image nginx:latest
 
 # Attach using acr-resource-id
 az aks update --name myAKSCluster --resource-group myResourceGroup --attach-acr <acr-resource-id>
@@ -273,4 +273,225 @@ spec:
             memory: 1Gi
           requests: #设置所需资源
             cpu: 500m
-            memory: 512Mi        
+            memory: 512Mi 
+
+az acr import --name studyingacr1 --source ghcr.io/azure-samples/aks-store-demo/store-front:latest --image store-front:latest
+
+
+
+
+az network public-ip create --name appgw1pip1 --resource-group studyingrg --allocation-method Static --sku Standard
+az network application-gateway create --name appgw1 --resource-group studyingrg --sku Standard_v2 --public-ip-address appgw1pip1 --vnet-name studying-vnet1 --subnet APPGW --priority 100
+
+appgwId=$(az network application-gateway show --name appgw1 --resource-group studyingrg -o tsv --query "id")
+az aks enable-addons --name aks1 --resource-group studyingrg --addon ingress-appgw --appgw-id $appgwId
+az aks approuting enable --resource-group studyingrg --name aks1
+
+
+
+helm install oci://mcr.microsoft.com/azure-application-gateway/charts/ingress-azure  agic-controller --version 1.7.5 --namespace default --debug \
+     --set appgw.name=appgw1 \
+     --set appgw.resourceGroup=studyingrg \
+     --set appgw.subscriptionId='15e95d2e-6cd0-4d1c-96da-b8e055a62ee8' \
+     --set appgw.shared=false \
+     --set armAuth.type=servicePrincipal \
+     --set armAuth.secretJSON='' \
+     --set rbac.enabled=true \
+     --set verbosityLevel=3 \
+     --set kubernetes.watchNamespace=default \
+     --set aksClusterConfiguration.apiServerAddress=aks1-dns-n0g37ocg.hcp.chinanorth3.cx.prod.service.azk8s.cn
+
+helm upgrade -i ingress-agic application-gateway-kubernetes-ingress/ingress-azure \
+     --version 1.2.0-rc1 \
+     --namespace default \
+     --debug \
+     --set appgw.name=appgw1 \
+     --set appgw.resourceGroup=studyingrg \
+     --set appgw.subscriptionId='15e95d2e-6cd0-4d1c-96da-b8e055a62ee8' \
+     --set appgw.shared=false \
+     --set appgw.usePrivateIP=false \
+     --set armAuth.type=servicePrincipal \
+     --set armAuth.secretJSON='' \
+     --set rbac.enabled=true \
+     --set verbosityLevel=3 \
+     --set kubernetes.watchNamespace=default \
+     --set aksClusterConfiguration.apiServerAddress='aks1-dns-n0g37ocg.hcp.chinanorth3.cx.prod.service.azk8s.cn'
+
+
+
+
+az aks show -n aks1 -g studyingrg --query fqdn -o tsv
+az identity create --name "userAssignedIdentityName" --resource-group "MC_studyingrg_aks1_chinanorth3" --subscription ""
+
+resourceGroup="MC_studyingrg_aks1_chinanorth3"
+identityName="userAssignedIdentityName"
+az identity list -g $resourceGroup --query "[?name == '$identityName'].principalId | [0]" -o tsv
+
+
+resourceGroup="MC_studyingrg_aks1_chinanorth3"
+identityName="userAssignedIdentityName"
+# Get the Application Gateway ID
+AppGatewayID=$(az network application-gateway list --query '[].id' -o tsv)
+role="contributor"
+# Get the principal ID for the user-assigned identity
+principalId=$(az identity list -g $resourceGroup --query "[?name == '$identityName'].principalId | [0]" -o tsv)
+az role assignment create --assignee $principalId --role $role --scope $AppGatewayID
+
+
+
+
+
+
+
+# This file contains the essential configs for the ingress controller helm chart
+
+# Verbosity level of the App Gateway Ingress Controller
+verbosityLevel: 3
+
+################################################################################
+# Specify which application gateway the ingress controller must manage
+#
+appgw:
+    subscriptionId: 15e95d2e-6cd0-4d1c-96da-b8e055a62ee8
+    resourceGroup: MC_studyingrg_aks1_chinanorth3
+    name: <applicationGatewayName>
+
+    # Setting appgw.shared to "true" creates an AzureIngressProhibitedTarget CRD.
+    # This prohibits AGIC from applying config for any host/path.
+    # Use "kubectl get AzureIngressProhibitedTargets" to view and change this.
+    shared: false
+
+################################################################################
+# Specify which kubernetes namespace the ingress controller must watch
+# Default value is "default"
+# Leaving this variable out or setting it to blank or empty string would
+# result in Ingress Controller observing all accessible namespaces.
+#
+# kubernetes:
+#   watchNamespace: <namespace>
+
+################################################################################
+# Specify the authentication with Azure Resource Manager
+#
+# Two authentication methods are available:
+# - Option 1: Azure-AD-workload-identity
+armAuth:
+    type: workloadIdentity
+    identityClientID:  <identityClientId>
+
+## Alternatively you can use Service Principal credentials
+# armAuth:
+#    type: servicePrincipal
+#    secretJSON: <<Generate this value with: "az ad sp create-for-rbac --role Contributor --sdk-auth | base64 -w0" >>
+
+################################################################################
+# Specify if the cluster is Kubernetes RBAC enabled or not
+rbac:
+    enabled: false # true/false
+
+# Specify aks cluster related information. THIS IS BEING DEPRECATED.
+aksClusterConfiguration:
+    apiServerAddress: <aks-api-server-address>
+
+
+
+az provider register -n 'AllowApplicationGatewayTlsProxy'
+
+
+az keyvault create --resource-group studyingrg --location chinanorth3 --name studyingkv1 --enable-rbac-authorization true
+az keyvault certificate import --vault-name studyingkv1 --name serverpfx --file Certificates/server.pfx --password 
+KEYVAULTID=$(az keyvault show --name studyingkv1 --query "id" --output tsv)
+az aks approuting update --resource-group studyingrg --name aks1 --enable-kv --attach-kv ${KEYVAULTID}
+az keyvault certificate show --vault-name studyingkv1 --name serverpfx --query "id" --output tsv
+
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.azure.com/tls-cert-keyvault-uri: 
+  name: aks-helloworld
+  namespace: hello-web-app-routing
+spec:
+  ingressClassName: webapprouting.kubernetes.azure.com
+  rules:
+  - host: www.example.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: aks-helloworld
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - www.example.com
+    secretName: keyvault-aks-helloworld
+
+
+
+
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+  namespace: studying
+  labels:
+    app: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    ports:
+    - containerPort: 80
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.azure.com/tls-cert-keyvault-uri: https://studyingkv1.vault.azure.cn/certificates/serverpfx
+  name: aks-helloworld
+  namespace: studying 
+spec:
+  ingressClassName: webapprouting.kubernetes.azure.com
+  rules:
+  - host: www.example.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: nginx-service
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - www.example.com
+    secretName: keyvault-aks-helloworld
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+  namespace: studying
+spec:
+  selector:
+    app: nginx
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+```
+
+这个配置文件包含了一个 Nginx Pod 声明、一个 Ingress 资源以及一个 Service 资源。Nginx Pod 将会在 `studying` 命名空间中运行，并且 Ingress 资源将会路由流量到这个 Nginx 服务。
+
+如果你有任何其他问题或需要进一步的修改，请告诉我！
