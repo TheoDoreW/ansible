@@ -520,3 +520,5 @@ AzureDiagnostics
 | where Category == "cluster-autoscaler"
 | where log_s contains "remov"
 | sort by TimeGenerated
+
+aksehns1/aksautoscalereh1
