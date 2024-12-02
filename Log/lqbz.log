@@ -492,6 +492,31 @@ spec:
     targetPort: 80
 ```
 
-这个配置文件包含了一个 Nginx Pod 声明、一个 Ingress 资源以及一个 Service 资源。Nginx Pod 将会在 `studying` 命名空间中运行，并且 Ingress 资源将会路由流量到这个 Nginx 服务。
+Microsoft.Compute/virtualMachines/write
+Microsoft.Network/networkInterfaces/write
 
-如果你有任何其他问题或需要进一步的修改，请告诉我！
+
+az storage message get -q esakssaqueue1 --visibility-timeout 300 --account-name studyingsa1
+
+az aks update --resource-group studyingrg --name publicaks1 --enable-cluster-autoscaler --min-count 1 --max-count 3
+
+az aks update --resource-group studyingrg --name publicaks1 --cluster-autoscaler-profile scale-down-utilization-threshold=0.1
+
+
+az aks update --resource-group studyingrg --name publicaks1 --cluster-autoscaler-profile scan-interval=30s,scale-down-delay-after-add=0m,scale-down-delay-after-failure=1m,scale-down-unneeded-time=3m,scale-down-unready-time=3m,max-graceful-termination-sec=30,skip-nodes-with-local-storage=false,max-empty-bulk-delete=1000,max-total-unready-percentage=100,ok-total-unready-count=1000,max-node-provision-time=15m,scale-down-utilization-threshold=0.1
+
+az monitor diagnostic-settings create --name AKS-Diagnostics --resource /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myresourcegroup/providers/Microsoft.ContainerService/managedClusters/my-cluster --logs '[{"category": "kube-audit","enabled": true}, {"category": "kube-audit-admin", "enabled": true}, {"category": "kube-apiserver", "enabled": true}, {"category": "kube-controller-manager", "enabled": true}, {"category": "kube-scheduler", "enabled": true}, {"category": "cluster-autoscaler", "enabled": true}, {"category": "cloud-controller-manager", "enabled": true}, {"category": "guard", "enabled": true}, {"category": "csi-azuredisk-controller", "enabled": true}, {"category": "csi-azurefile-controller", "enabled": true}, {"category": "csi-snapshot-controller", "enabled": true}]'  --workspace /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourcegroups/myresourcegroup/providers/microsoft.operationalinsights/workspaces/myworkspace --export-to-resource-specific true
+
+
+GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/virtualMachineScaleSets/{virtualMachineScaleSetName}/virtualMachines/{virtualmachineIndex}/networkInterfaces/{networkInterfaceName}/ipconfigurations/{ipConfigurationName}/publicipaddresses/{publicIpAddressName}?api-version=2017-03-30
+
+
+AzureDiagnostics
+| where Category == "cluster-autoscaler"
+|where log_s contains "virtualMachineScaleSets"
+| sort by TimeGenerated
+
+AzureDiagnostics
+| where Category == "cluster-autoscaler"
+| where log_s contains "remov"
+| sort by TimeGenerated
