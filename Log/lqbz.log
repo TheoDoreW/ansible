@@ -216,8 +216,15 @@ az storage queue list --account-name tplinksa1
 az aks get-credentials --resource-group studyingrg --name aks1
 az login --tenant 16b3c013-d300-468d-ac64-7eda0820b6d3
 az aks get-credentials --resource-group tplinkrg --name tpaks1
-az eventhubs namespace create --name tp-ehns1 --resource-group tplinkrg
-az eventhubs eventhub create --name tpehns1aks1 --resource-group tplinkrg --namespace-name 'tp-ehns1'
+az eventhubs namespace create --name tp-ehns1 --resource-group tplinkrg --sku Premium
+az eventhubs eventhub create --name tpehns1aks1 --resource-group tplinkrg --namespace-name 'tp-ehns1' --partition-count 1
+
+az eventhubs namespace delete --name tp-ehns1 --resource-group tplinkrg --sku Premium
+az eventhubs eventhub delete --name tpehns1aks1 --resource-group tplinkrg --namespace-name 'tp-ehns1'
+
+az eventhubs eventhub list --resource-group tplinkrg --namespace-name 'tp-ehns1'
+
+az aks update --resource-group tplinkrg --name tpaks1 --cluster-autoscaler-profile scan-interval=30s,scale-down-delay-after-add=0m,scale-down-delay-after-failure=1m,scale-down-unneeded-time=3m,scale-down-unready-time=3m,max-graceful-termination-sec=30,skip-nodes-with-local-storage=false,max-empty-bulk-delete=1000,max-total-unready-percentage=100,ok-total-unready-count=1000,max-node-provision-time=15m,scale-down-utilization-threshold=0.1
 
 
 
