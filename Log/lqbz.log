@@ -213,11 +213,12 @@ WVDManagement
 
 az storage queue list --account-name tplinksa1
 
-az aks get-credentials --resource-group tplinkrg --name tplinkaks1
+az aks get-credentials --resource-group studyingrg --name aks1
 az login --tenant 16b3c013-d300-468d-ac64-7eda0820b6d3
+az aks get-credentials --resource-group tplinkrg --name tpaks1
+az eventhubs namespace create --name tp-ehns1 --resource-group tplinkrg
+az eventhubs eventhub create --name tpehns1aks1 --resource-group tplinkrg --namespace-name 'tp-ehns1'
 
-
-docker build -f docker-compose-quickstart.yml up -d
 
 
 az vmss show \
