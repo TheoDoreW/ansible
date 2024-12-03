@@ -222,7 +222,9 @@ az eventhubs eventhub create --name tpehns1aks1 --resource-group tplinkrg --name
 az eventhubs namespace delete --name tp-ehns1 --resource-group tplinkrg --sku Premium
 az eventhubs eventhub delete --name tpehns1aks1 --resource-group tplinkrg --namespace-name 'tp-ehns1'
 
-az eventhubs eventhub list --resource-group tplinkrg --namespace-name 'tp-ehns1'
+az eventhubs eventhub list --resource-group tplinkrg --namespace-name 'tp-ehns1' -o table
+
+
 
 az aks update --resource-group tplinkrg --name tpaks1 --cluster-autoscaler-profile scan-interval=30s,scale-down-delay-after-add=0m,scale-down-delay-after-failure=1m,scale-down-unneeded-time=3m,scale-down-unready-time=3m,max-graceful-termination-sec=30,skip-nodes-with-local-storage=false,max-empty-bulk-delete=1000,max-total-unready-percentage=100,ok-total-unready-count=1000,max-node-provision-time=15m,scale-down-utilization-threshold=0.1
 
@@ -233,6 +235,7 @@ az vmss show \
     -n aks-agentpool-22199431-vmss \
     --query virtualMachineProfile.networkProfile.networkInterfaceConfigurations[].applicationSecurityGroups
 
+wangxin4@tp-link.com.hk
 
 
 az acr create --resource-group tplinkrg --name tplinkacr1 --sku Basic
@@ -530,3 +533,5 @@ AzureDiagnostics
 | sort by TimeGenerated
 
 aksehns1/aksautoscalereh1
+
+
