@@ -535,3 +535,35 @@ AzureDiagnostics
 aksehns1/aksautoscalereh1
 
 
+kubectl get events --field-selector source=cluster-autoscaler,reason=NotTriggerScaleUp
+
+
+kubectl get nodes --field-selector metadata.labels.agentpool=userpool
+
+
+Labels:             agentpool=userpool
+                    beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/instance-type=Standard_D8ds_v5
+                    beta.kubernetes.io/os=linux
+                    failure-domain.beta.kubernetes.io/region=chinanorth3
+                    failure-domain.beta.kubernetes.io/zone=chinanorth3-1
+                    kubernetes.azure.com/agentpool=userpool
+                    kubernetes.azure.com/cluster=MC_studyingrg_aks1_chinanorth3
+                    kubernetes.azure.com/consolidated-additional-properties=860c2915-ad72-11ef-9ae9-5266f689ef02
+                    kubernetes.azure.com/kubelet-identity-client-id=583a9c6f-c3f7-4e0d-ac73-ac9fbc1cb506
+                    kubernetes.azure.com/mode=user
+                    kubernetes.azure.com/node-image-version=AKSUbuntu-2204gen2containerd-202411.03.0
+                    kubernetes.azure.com/nodepool-type=VirtualMachineScaleSets
+                    kubernetes.azure.com/os-sku=Ubuntu
+                    kubernetes.azure.com/role=agent
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=aks-userpool-89831090-vmss000000
+                    kubernetes.io/os=linux
+                    node.kubernetes.io/instance-type=Standard_D8ds_v5
+                    topology.disk.csi.azure.com/zone=chinanorth3-1
+                    topology.kubernetes.io/region=chinanorth3
+                    topology.kubernetes.io/zone=chinanorth3-1
+
+
+
+az vmss list-instance-public-ips --resource-group MC_tplinkrg_tpaks1_brazilsouth --name aks-agentpool-23394293-vmss
