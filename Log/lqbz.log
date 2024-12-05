@@ -567,3 +567,7 @@ Labels:             agentpool=userpool
 
 
 az vmss list-instance-public-ips --resource-group MC_tplinkrg_tpaks1_brazilsouth --name aks-agentpool-23394293-vmss
+
+az vm image list-offers --location chinaeast2 --publisher RedHat --output table
+az vm image list-skus --location chinanorth3 --publisher RedHat --offer RHEL --output table
+
