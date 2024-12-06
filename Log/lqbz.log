@@ -571,3 +571,22 @@ az vmss list-instance-public-ips --resource-group MC_tplinkrg_tpaks1_brazilsouth
 az vm image list-offers --location chinaeast2 --publisher RedHat --output table
 az vm image list-skus --location chinanorth3 --publisher RedHat --offer RHEL --output table
 
+
+
+Hi 朱经理：
+
+李昊旻：
+1、 支持配置多证书；2、支持多可用区负载均衡、容灾（最好支持一个业务域名解析出多个IP，这样客户端可以换IP重试）；3、支持根据业务域名区分走防火墙/不走防火墙；4、支持业务Pod获取到客户端真实IP；5、支持健康检测
+
+ 
+徐飞宇：
+1. azure实例CPU性能不如aws；2.Azure AMD CPU兼容性问题（我们会使用ffmpeg）；3. Azure AKS nginx ingress插件问题（静态IP / 高可用问题 / 多证书配置）。
+
+1. 讨论 AKS 高可用设计，LB 如何支持跨 AZ ；
+2. 
+
+
+40.162.202.112,40.162.216.190
+
+
+Germany
