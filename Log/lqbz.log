@@ -213,7 +213,7 @@ WVDManagement
 
 az storage queue list --account-name tplinksa1
 
-az aks get-credentials --resource-group studyingrg --name aks1
+az aks get-credentials --resource-group tplinkrg --name tpaks1
 az login --tenant 16b3c013-d300-468d-ac64-7eda0820b6d3
 az aks get-credentials --resource-group tplinkrg --name tpaks1
 az eventhubs namespace create --name tp-ehns1 --resource-group tplinkrg --sku Premium
@@ -590,3 +590,9 @@ Hi 朱经理：
 
 
 Germany
+
+docker pull peterdavehello/azcopy:10
+
+
+docker run --rm -it -v $PWD/src:/src peterdavehello/azcopy:10.11.0 azcopy sync /src https://azcopydockertest.blob.core.windows.net/$$web
+
