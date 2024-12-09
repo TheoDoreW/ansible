@@ -213,21 +213,11 @@ WVDManagement
 
 az storage queue list --account-name tplinksa1
 
-az aks get-credentials --resource-group tplinkrg --name tpaks1
+az aks get-credentials --resource-group tplinkrg --name tplinkaks1
 az login --tenant 16b3c013-d300-468d-ac64-7eda0820b6d3
-az aks get-credentials --resource-group tplinkrg --name tpaks1
-az eventhubs namespace create --name tp-ehns1 --resource-group tplinkrg --sku Premium
-az eventhubs eventhub create --name tpehns1aks1 --resource-group tplinkrg --namespace-name 'tp-ehns1' --partition-count 1
-
-az eventhubs namespace delete --name tp-ehns1 --resource-group tplinkrg --sku Premium
-az eventhubs eventhub delete --name tpehns1aks1 --resource-group tplinkrg --namespace-name 'tp-ehns1'
-
-az eventhubs eventhub list --resource-group tplinkrg --namespace-name 'tp-ehns1' -o table
 
 
-
-az aks update --resource-group tplinkrg --name tpaks1 --cluster-autoscaler-profile scan-interval=30s,scale-down-delay-after-add=0m,scale-down-delay-after-failure=1m,scale-down-unneeded-time=3m,scale-down-unready-time=3m,max-graceful-termination-sec=30,skip-nodes-with-local-storage=false,max-empty-bulk-delete=1000,max-total-unready-percentage=100,ok-total-unready-count=1000,max-node-provision-time=15m,scale-down-utilization-threshold=0.1
-
+docker build -f docker-compose-quickstart.yml up -d
 
 
 az vmss show \
@@ -235,7 +225,6 @@ az vmss show \
     -n aks-agentpool-22199431-vmss \
     --query virtualMachineProfile.networkProfile.networkInterfaceConfigurations[].applicationSecurityGroups
 
-wangxin4@tp-link.com.hk
 
 
 az acr create --resource-group tplinkrg --name tplinkacr1 --sku Basic
@@ -511,10 +500,10 @@ az storage message get -q esakssaqueue1 --visibility-timeout 300 --account-name 
 
 az aks update --resource-group studyingrg --name publicaks1 --enable-cluster-autoscaler --min-count 1 --max-count 3
 
-az aks update --resource-group studyingrg --name publicaks1 --cluster-autoscaler-profile scale-down-utilization-threshold=0.1
+az aks update --resource-group tplinkrg --name tpaks1 --cluster-autoscaler-profile scale-down-utilization-threshold=0.1
 
 
-az aks update --resource-group studyingrg --name publicaks1 --cluster-autoscaler-profile scan-interval=30s,scale-down-delay-after-add=0m,scale-down-delay-after-failure=1m,scale-down-unneeded-time=3m,scale-down-unready-time=3m,max-graceful-termination-sec=30,skip-nodes-with-local-storage=false,max-empty-bulk-delete=1000,max-total-unready-percentage=100,ok-total-unready-count=1000,max-node-provision-time=15m,scale-down-utilization-threshold=0.1
+az aks update --resource-group tplinkrg --name tpaks1 --cluster-autoscaler-profile scan-interval=30s,scale-down-delay-after-add=0m,scale-down-delay-after-failure=1m,scale-down-unneeded-time=3m,scale-down-unready-time=3m,max-graceful-termination-sec=30,skip-nodes-with-local-storage=false,max-empty-bulk-delete=1000,max-total-unready-percentage=100,ok-total-unready-count=1000,max-node-provision-time=15m,scale-down-utilization-threshold=0.1
 
 az monitor diagnostic-settings create --name AKS-Diagnostics --resource /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myresourcegroup/providers/Microsoft.ContainerService/managedClusters/my-cluster --logs '[{"category": "kube-audit","enabled": true}, {"category": "kube-audit-admin", "enabled": true}, {"category": "kube-apiserver", "enabled": true}, {"category": "kube-controller-manager", "enabled": true}, {"category": "kube-scheduler", "enabled": true}, {"category": "cluster-autoscaler", "enabled": true}, {"category": "cloud-controller-manager", "enabled": true}, {"category": "guard", "enabled": true}, {"category": "csi-azuredisk-controller", "enabled": true}, {"category": "csi-azurefile-controller", "enabled": true}, {"category": "csi-snapshot-controller", "enabled": true}]'  --workspace /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourcegroups/myresourcegroup/providers/microsoft.operationalinsights/workspaces/myworkspace --export-to-resource-specific true
 
@@ -535,64 +524,62 @@ AzureDiagnostics
 aksehns1/aksautoscalereh1
 
 
-kubectl get events --field-selector source=cluster-autoscaler,reason=NotTriggerScaleUp
+az eventhubs eventhub create --resource-group studyingrg --namespace-name aksehns --name aksautoscalereh
 
 
-kubectl get nodes --field-selector metadata.labels.agentpool=userpool
+azcopy copy 'https://hctssa1.blob.core.windows.net/bigfile/22621.1.220506-1250.ni_release_amd64fre_CLIENT_LOF_PACKAGES_OEM.iso?sv=2023-01-03&se=2025-01-08T11%3A52%3A18Z&sr=c&sp=rwl&sig=hhJDJMfFaV%2FYtMsSj%2BmWbDqDTGkR626ZpVGEBYSHiyc%3D' '/Users/xinsheng.wang/xinsheng/azcopy/iso' --log-level=INFO > azcopy-log.txt;
 
 
-Labels:             agentpool=userpool
-                    beta.kubernetes.io/arch=amd64
-                    beta.kubernetes.io/instance-type=Standard_D8ds_v5
-                    beta.kubernetes.io/os=linux
-                    failure-domain.beta.kubernetes.io/region=chinanorth3
-                    failure-domain.beta.kubernetes.io/zone=chinanorth3-1
-                    kubernetes.azure.com/agentpool=userpool
-                    kubernetes.azure.com/cluster=MC_studyingrg_aks1_chinanorth3
-                    kubernetes.azure.com/consolidated-additional-properties=860c2915-ad72-11ef-9ae9-5266f689ef02
-                    kubernetes.azure.com/kubelet-identity-client-id=583a9c6f-c3f7-4e0d-ac73-ac9fbc1cb506
-                    kubernetes.azure.com/mode=user
-                    kubernetes.azure.com/node-image-version=AKSUbuntu-2204gen2containerd-202411.03.0
-                    kubernetes.azure.com/nodepool-type=VirtualMachineScaleSets
-                    kubernetes.azure.com/os-sku=Ubuntu
-                    kubernetes.azure.com/role=agent
-                    kubernetes.io/arch=amd64
-                    kubernetes.io/hostname=aks-userpool-89831090-vmss000000
-                    kubernetes.io/os=linux
-                    node.kubernetes.io/instance-type=Standard_D8ds_v5
-                    topology.disk.csi.azure.com/zone=chinanorth3-1
-                    topology.kubernetes.io/region=chinanorth3
-                    topology.kubernetes.io/zone=chinanorth3-1
+azcopy copy 'https://hctssa1.blob.core.windows.net/bigfile/PT1H.json?sv=2023-01-03&se=2025-01-08T11%3A52%3A18Z&sr=c&sp=rwl&sig=hhJDJMfFaV%2FYtMsSj%2BmWbDqDTGkR626ZpVGEBYSHiyc%3D' '/Users/xinsheng.wang/xinsheng/azcopy/PT1H.json' --log-level=INFO > azcopy-log.txt;
 
 
-
-az vmss list-instance-public-ips --resource-group MC_tplinkrg_tpaks1_brazilsouth --name aks-agentpool-23394293-vmss
-
-az vm image list-offers --location chinaeast2 --publisher RedHat --output table
-az vm image list-skus --location chinanorth3 --publisher RedHat --offer RHEL --output table
-
-
-
-Hi 朱经理：
-
-李昊旻：
-1、 支持配置多证书；2、支持多可用区负载均衡、容灾（最好支持一个业务域名解析出多个IP，这样客户端可以换IP重试）；3、支持根据业务域名区分走防火墙/不走防火墙；4、支持业务Pod获取到客户端真实IP；5、支持健康检测
-
- 
-徐飞宇：
-1. azure实例CPU性能不如aws；2.Azure AMD CPU兼容性问题（我们会使用ffmpeg）；3. Azure AKS nginx ingress插件问题（静态IP / 高可用问题 / 多证书配置）。
-
-1. 讨论 AKS 高可用设计，LB 如何支持跨 AZ ；
-2. 
+export AZCOPY_CRED_TYPE=Anonymous;
+export AZCOPY_CONCURRENCY_VALUE=AUTO;
+./azcopy copy "/Users/xinsheng.wang/Downloads/22621.1.220506-1250.ni_release_amd64fre_CLIENT_LOF_PACKAGES_OEM.iso" "https://hctssa1.blob.core.windows.net/bigfile/22621.1.220506-1250.ni_release_amd64fre_CLIENT_LOF_PACKAGES_OEM.iso?sv=2023-01-03&se=2025-01-08T11%3A52%3A18Z&sr=c&sp=rwl&sig=hhJDJMfFaV%2FYtMsSj%2BmWbDqDTGkR626ZpVGEBYSHiyc%3D" --overwrite=prompt --from-to=LocalBlob --blob-type Detect --follow-symlinks --check-length=true --put-md5 --follow-symlinks --disable-auto-decoding=false --recursive --log-level=INFO;
+unset AZCOPY_CRED_TYPE;
+unset AZCOPY_CONCURRENCY_VALUE;
 
 
-40.162.202.112,40.162.216.190
+azcopy copy azcopy-log.txt 'https://hctssa1.blob.core.windows.net/logfile/azcopy-logs.txt?sv=2022-11-02&ss=bfqt&srt=sco&sp=rwdlacupiytfx&se=2024-12-09T20:53:21Z&st=2024-12-09T12:53:21Z&spr=https&sig=STlfQ4yK1gf8L5m5A8z2rdVCCtBYPZgSwiEkBOiaxsU%3D' --follow-symlinks --check-length=true --put-md5 --follow-symlinks --disable-auto-decoding=false --recursive --log-level=INFO;
+
+export AZCOPY_CRED_TYPE=Anonymous;
+export AZCOPY_CONCURRENCY_VALUE=AUTO;
+./azcopy copy "/Users/xinsheng.wang/Downloads/PT1H.json" "https://hctssa1.blob.core.windows.net/logfile/PT1H.json?sv=2023-01-03&se=2025-01-08T12%3A50%3A31Z&sr=c&sp=rwl&sig=lL1UuvK0jBDUjB3iBSvq6AtgAMk29Hl3HA0zqD4jupk%3D" --overwrite=prompt --from-to=LocalBlob --blob-type AppendBlob --follow-symlinks --check-length=true --put-md5 --follow-symlinks --disable-auto-decoding=false --recursive --log-level=INFO;
+unset AZCOPY_CRED_TYPE;
+unset AZCOPY_CONCURRENCY_VALUE;
 
 
-Germany
-
-docker pull peterdavehello/azcopy:10
+sv=2022-11-02&ss=bfqt&srt=sco&sp=rwdlacupiytfx&se=2024-12-09T20:48:25Z&st=2024-12-09T12:48:25Z&sip=0.0.0.0&spr=https&sig=n7TmYfFmuYsqmmkg2ebdFjHzrAdGQ3lP3IhnVYDummM%3D
 
 
-docker run --rm -it -v $PWD/src:/src peterdavehello/azcopy:10.11.0 azcopy sync /src https://azcopydockertest.blob.core.windows.net/$$web
+ dd if=/dev/vda of=/mnt/aliyunrhel79.raw bs=100M
+ dd if=/dev/zero of=fileimg bs=1M count=1000
 
+ az aks nodepool delete --resource-group hctrg --cluster-name hctaks1 --name userpool
+ az aks nodepool add --resource-group hctrg --cluster-name hctaks1 --name userpool1 --node-count 3 --node-vm-size Standard_D4s_v3 --mode User --no-wait
+
+export AZCOPY_CONCURRENCY_VALUE=AUTO;
+export AZCOPY_CRED_TYPE=Anonymous;
+azcopy remove "https://hctssa1.blob.core.windows.net/logfile/azcopy-merged-log.txt?sv=2023-01-03&se=2025-01-08T14%3A27%3A50Z&sr=c&sp=rdl&sig=zOTDkbQt7TpOrRaQWUcc0eWXrm%2By2nV%2B%2Fl%2F%2FX90CIQk%3D" --delete-snapshots=include --from-to=BlobTrash --recursive --log-level=INFO;
+unset AZCOPY_CONCURRENCY_VALUE;
+unset AZCOPY_CRED_TYPE;
+
+
+azcopy list 'https://hctssa1.blob.core.windows.net/logfile?sv=2022-11-02&ss=bfqt&srt=sco&sp=rwdlacupiytfx&se=2024-12-09T20:53:21Z&st=2024-12-09T12:53:21Z&spr=https&sig=STlfQ4yK1gf8L5m5A8z2rdVCCtBYPZgSwiEkBOiaxsU%3D' --output-type=text > file-list.txt;
+            
+            # 下载所有日志文件
+            while IFS= read -r line; do
+              if echo "$line" | grep -q "azcopy-log-"; then
+                file=$(echo "$line" | awk '{print $1}');
+                azcopy copy "https://hctssa1.blob.core.windows.net/logfile/$file?sv=2022-11-02&ss=bfqt&srt=sco&sp=rwdlacupiytfx&se=2024-12-09T20:53:21Z&st=2024-12-09T12:53:21Z&spr=https&sig=STlfQ4yK1gf8L5m5A8z2rdVCCtBYPZgSwiEkBOiaxsU%3D" .
+              fi
+            done < file-list.txt;
+            
+            # 合并日志文件
+            cat /merged-logs/azcopy-log-*.txt > /merged-logs/azcopy-merged-log.txt;
+            
+            # 上传合并后的日志文件
+            azcopy copy /merged-logs/azcopy-merged-log.txt 'https://hctssa1.blob.core.windows.net/logfile/azcopy-merged-log.txt?sv=2022-11-02&ss=bfqt&srt=sco&sp=rwdlacupiytfx&se=2024-12-09T20:53:21Z&st=2024-12-09T12:53:21Z&spr=https&sig=STlfQ4yK1gf8L5m5A8z2rdVCCtBYPZgSwiEkBOiaxsU%3D';
+
+
+kubectl debug node/aks-userpool1-42112520-vmss000000 -it --image=mcr.microsoft.com/cbl-mariner/busybox:2.0

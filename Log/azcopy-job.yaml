@@ -1,0 +1,245 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: azcopy-logs-pv
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ultra-ssd
+  azureDisk:
+    kind: Managed
+    diskName: azcopy-logs-disk
+    diskURI: /subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.Compute/disks/azcopy-logs-disk
+    cachingMode: None
+    storageAccountType: UltraSSD_LRS
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: azcopy-logs-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: ultra-ssd
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: azcopy-job-1
+spec:
+  template:
+    spec:
+      containers:
+      - name: azcopy-container
+        image: mcr.microsoft.com/azure-storage/azcopy:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            azcopy copy 'https://<source-storage-account-name>.blob.core.windows.net/<container-name>/<blob-path>?<SAS-token>'
+              '/data/<blob-path>'
+              --log-level=INFO --output-type=json > /azcopy-logs/azcopy-log.txt;
+            azcopy copy /azcopy-logs/azcopy-log.txt "https://<destination-storage-account-name>.blob.core.windows.net/<container-name>/azcopy-log-$(hostname)-$(date +%s).txt?<SAS-token>";
+        volumeMounts:
+        - name: azcopy-logs
+          mountPath: /azcopy-logs
+        - name: data-storage
+          mountPath: /data
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "1"
+          limits:
+            memory: "4Gi"
+            cpu: "1"
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/hostname: <node-name-1>
+      volumes:
+      - name: azcopy-logs
+        persistentVolumeClaim:
+          claimName: azcopy-logs-pvc
+      - name: data-storage
+        emptyDir: {}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: azcopy-job-2
+spec:
+  template:
+    spec:
+      containers:
+      - name: azcopy-container
+        image: mcr.microsoft.com/azure-storage/azcopy:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            azcopy copy 'https://<source-storage-account-name>.blob.core.windows.net/<container-name>/<blob-path>?<SAS-token>'
+              '/data/<blob-path>'
+              --log-level=INFO --output-type=json > /azcopy-logs/azcopy-log.txt;
+            azcopy copy /azcopy-logs/azcopy-log.txt "https://<destination-storage-account-name>.blob.core.windows.net/<container-name>/azcopy-log-$(hostname)-$(date +%s).txt?<SAS-token>";
+        volumeMounts:
+        - name: azcopy-logs
+          mountPath: /azcopy-logs
+        - name: data-storage
+          mountPath: /data
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "1"
+          limits:
+            memory: "4Gi"
+            cpu: "1"
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/hostname: <node-name-2>
+      volumes:
+      - name: azcopy-logs
+        persistentVolumeClaim:
+          claimName: azcopy-logs-pvc
+      - name: data-storage
+        emptyDir: {}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: azcopy-job-3
+spec:
+  template:
+    spec:
+      containers:
+      - name: azcopy-container
+        image: mcr.microsoft.com/azure-storage/azcopy:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            azcopy copy 'https://<source-storage-account-name>.blob.core.windows.net/<container-name>/<blob-path>?<SAS-token>'
+              '/data/<blob-path>'
+              --log-level=INFO --output-type=json > /azcopy-logs/azcopy-log.txt;
+            azcopy copy /azcopy-logs/azcopy-log.txt "https://<destination-storage-account-name>.blob.core.windows.net/<container-name>/azcopy-log-$(hostname)-$(date +%s).txt?<SAS-token>";
+        volumeMounts:
+        - name: azcopy-logs
+          mountPath: /azcopy-logs
+        - name: data-storage
+          mountPath: /data
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "1"
+          limits:
+            memory: "4Gi"
+            cpu: "1"
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/hostname: <node-name-3>
+      volumes:
+      - name: azcopy-logs
+        persistentVolumeClaim:
+          claimName: azcopy-logs-pvc
+      - name: data-storage
+        emptyDir: {}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: azcopy-job-4
+spec:
+  template:
+    spec:
+      containers:
+      - name: azcopy-container
+        image: mcr.microsoft.com/azure-storage/azcopy:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            azcopy copy 'https://<source-storage-account-name>.blob.core.windows.net/<container-name>/<blob-path>?<SAS-token>'
+              '/data/<blob-path>'
+              --log-level=INFO --output-type=json > /azcopy-logs/azcopy-log.txt;
+            azcopy copy /azcopy-logs/azcopy-log.txt "https://<destination-storage-account-name>.blob.core.windows.net/<container-name>/azcopy-log-$(hostname)-$(date +%s).txt?<SAS-token>";
+        volumeMounts:
+        - name: azcopy-logs
+          mountPath: /azcopy-logs
+        - name: data-storage
+          mountPath: /data
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "1"
+          limits:
+            memory: "4Gi"
+            cpu: "1"
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/hostname: <node-name-1>
+      volumes:
+      - name: azcopy-logs
+        persistentVolumeClaim:
+          claimName: azcopy-logs-pvc
+      - name: data-storage
+        emptyDir: {}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: azcopy-job-5
+spec:
+  template:
+    spec:
+      containers:
+      - name: azcopy-container
+        image: mcr.microsoft.com/azure-storage/azcopy:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            azcopy copy 'https://<source-storage-account-name>.blob.core.windows.net/<container-name>/<blob-path>?<SAS-token>'
+              '/data/<blob-path>'
+              --log-level=INFO --output-type=json > /azcopy-logs/azcopy-log.txt;
+            azcopy copy /azcopy-logs/azcopy-log.txt "https://<destination-storage-account-name>.blob.core.windows.net/<container-name>/azcopy-log-$(hostname)-$(date +%s).txt?<SAS-token>";
+        volumeMounts:
+        - name: azcopy-logs
+          mountPath: /azcopy-logs
+        - name: data-storage
+          mountPath: /data
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "1"
+          limits:
+            memory: "4Gi"
+            cpu: "1"
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/hostname: <node-name-2>
+      volumes:
+      - name: azcopy-logs
+        persistentVolumeClaim:
+          claimName: azcopy-logs-pvc
+      - name: data-storage
+        emptyDir: {}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: azcopy-job-6
+spec:
+  template:
+    spec:
+      containers:
+      - name: azcopy-container
+        image: mcr.microsoft.com/azure-storage/azcopy:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            azcopy copy 'https://<source-storage-account-name>.blob.core.windows.net/<container-name>/<blob-path>?<SAS-token>'
+              '/data/<blob-path>'
+              --log-level=INFO --output-type=json > /azcopy-logs/azcopy-log.txt;
+            azcopy copy /azcopy-logs/azcopy-log.txt "https://<destination-storage-account-name>.blob.core.windows.net/<container-name>/azcopy-log-$(hostname)-$(date +%s).txt?<SAS-token>";
+        volumeMounts:
+        - name: azcopy-logs
+          mount
