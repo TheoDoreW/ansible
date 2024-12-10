@@ -555,8 +555,8 @@ sv=2022-11-02&ss=bfqt&srt=sco&sp=rwdlacupiytfx&se=2024-12-09T20:48:25Z&st=2024-1
  dd if=/dev/vda of=/mnt/aliyunrhel79.raw bs=100M
  dd if=/dev/zero of=fileimg bs=1M count=1000
 
- az aks nodepool delete --resource-group hctrg --cluster-name hctaks1 --name userpool
- az aks nodepool add --resource-group hctrg --cluster-name hctaks1 --name userpool1 --node-count 3 --node-vm-size Standard_D4s_v3 --mode User --no-wait
+az aks nodepool delete --resource-group hctrg --cluster-name hctaks1 --name userpool1
+az aks nodepool add --resource-group hctrg --cluster-name hctaks1 --name userpool1 --node-count 3 --node-vm-size Standard_D4s_v3 --mode User --zones 3 --enable-ultra-ssd --no-wait
 
 export AZCOPY_CONCURRENCY_VALUE=AUTO;
 export AZCOPY_CRED_TYPE=Anonymous;
@@ -565,21 +565,27 @@ unset AZCOPY_CONCURRENCY_VALUE;
 unset AZCOPY_CRED_TYPE;
 
 
-azcopy list 'https://hctssa1.blob.core.windows.net/logfile?sv=2022-11-02&ss=bfqt&srt=sco&sp=rwdlacupiytfx&se=2024-12-09T20:53:21Z&st=2024-12-09T12:53:21Z&spr=https&sig=STlfQ4yK1gf8L5m5A8z2rdVCCtBYPZgSwiEkBOiaxsU%3D' --output-type=text > file-list.txt;
-            
-            # 下载所有日志文件
-            while IFS= read -r line; do
-              if echo "$line" | grep -q "azcopy-log-"; then
-                file=$(echo "$line" | awk '{print $1}');
-                azcopy copy "https://hctssa1.blob.core.windows.net/logfile/$file?sv=2022-11-02&ss=bfqt&srt=sco&sp=rwdlacupiytfx&se=2024-12-09T20:53:21Z&st=2024-12-09T12:53:21Z&spr=https&sig=STlfQ4yK1gf8L5m5A8z2rdVCCtBYPZgSwiEkBOiaxsU%3D" .
-              fi
-            done < file-list.txt;
-            
-            # 合并日志文件
-            cat /merged-logs/azcopy-log-*.txt > /merged-logs/azcopy-merged-log.txt;
-            
-            # 上传合并后的日志文件
-            azcopy copy /merged-logs/azcopy-merged-log.txt 'https://hctssa1.blob.core.windows.net/logfile/azcopy-merged-log.txt?sv=2022-11-02&ss=bfqt&srt=sco&sp=rwdlacupiytfx&se=2024-12-09T20:53:21Z&st=2024-12-09T12:53:21Z&spr=https&sig=STlfQ4yK1gf8L5m5A8z2rdVCCtBYPZgSwiEkBOiaxsU%3D';
+sv=2022-11-02&ss=bfqt&srt=sco&sp=rwdlacupiytfx&se=2024-12-14T08:25:50Z&st=2024-12-09T23:25:50Z&spr=https&sig=di7psXLARP0L7f7ZOd0PUbPQk56lhFQs0JdUXPtvsQE%3D
+
+azcopy list 'https://hctssa1.blob.core.windows.net/logfile?sv=2022-11-02&ss=bfqt&srt=sco&sp=rwdlacupiytfx&se=2024-12-14T08:25:50Z&st=2024-12-09T23:25:50Z&spr=https&sig=di7psXLARP0L7f7ZOd0PUbPQk56lhFQs0JdUXPtvsQE%3D' --output-type=text > file-list.txt;
 
 
-kubectl debug node/aks-userpool1-42112520-vmss000000 -it --image=mcr.microsoft.com/cbl-mariner/busybox:2.0
+
+kubectl debug node/aks-userpool1-42112520-vmss000003 -it --image=mcr.microsoft.com/cbl-mariner/busybox:2.0
+
+
+
+azcopy copy "https://hctssa1.blob.core.windows.net/logfile/*?sv" .
+cat azcopy-log-*.txt > azcopy-log-merged-log.txt
+azcopy copy azcopy-log-merged-log.txt 'https://hctssa1.blob.core.windows.net/logfile/azcopy-merged-log.txt?sv'
+
+apply
+delete
+
+kubectl apply -f azure-ultra-disk-sc-15g-500tp.yaml
+kubectl apply -f azcopy-job-ultrassdpvc-15g.yaml
+kubectl apply -f azcopy-job-ultrassdpv-15g.yaml
+
+kubectl delete -f azure-ultra-disk-sc-1024g-2000tp.yaml
+kubectl delete -f azcopy-job-ultrassdpvc-1024g.yaml
+kubectl delete -f azcopy-job-ultrassdpv-1024g.yaml
