@@ -213,7 +213,7 @@ WVDManagement
 
 az storage queue list --account-name tplinksa1
 
-az aks get-credentials --resource-group tplinkrg --name tplinkaks1
+az aks get-credentials --resource-group tprg --name tpaks1
 az login --tenant 16b3c013-d300-468d-ac64-7eda0820b6d3
 
 
