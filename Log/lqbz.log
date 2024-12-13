@@ -549,11 +549,8 @@ unset AZCOPY_CRED_TYPE;
 unset AZCOPY_CONCURRENCY_VALUE;
 
 
-sv=2022-11-02&ss=bfqt&srt=sco&sp=rwdlacupiytfx&se=2024-12-09T20:48:25Z&st=2024-12-09T12:48:25Z&sip=0.0.0.0&spr=https&sig=n7TmYfFmuYsqmmkg2ebdFjHzrAdGQ3lP3IhnVYDummM%3D
-
-
- dd if=/dev/vda of=/mnt/aliyunrhel79.raw bs=100M
- dd if=/dev/zero of=fileimg bs=1M count=1000
+dd if=/dev/vda of=/mnt/aliyunrhel79.raw bs=100M
+dd if=/dev/zero of=fileimg bs=1M count=1000
 
 az aks nodepool delete --resource-group hctrg --cluster-name hctaks1 --name userpool1
 az aks nodepool add --resource-group hctrg --cluster-name hctaks1 --name userpool1 --node-count 3 --node-vm-size Standard_D4s_v3 --mode User --zones 3 --enable-ultra-ssd --no-wait
@@ -589,3 +586,38 @@ kubectl apply -f azcopy-job-ultrassdpv-15g.yaml
 kubectl delete -f azure-ultra-disk-sc-1024g-2000tp.yaml
 kubectl delete -f azcopy-job-ultrassdpvc-1024g.yaml
 kubectl delete -f azcopy-job-ultrassdpv-1024g.yaml
+
+
+# kubectl exec -it -nkube-system terway-eniip-xxxx -c policy -- cilium status --verbose
+...
+BPF Maps:   dynamic sizing: on (ratio: 0.002500)
+  Name                          Size
+  Auth                          524288
+  Non-TCP connection tracking   65536
+  TCP connection tracking       131072
+  Endpoint policy               65535
+...
+
+kubectl exec nginx-deployment-576c6b7b6-2s59p -it -- ps aux
+
+kubectl get events  --sort-by='.metadata.creationTimestamp'  -o 'go-template={{range .items}}{{.involvedObject.name}}{{"\t"}}{{.involvedObject.kind}}{{"\t"}}{{.message}}{{"\t"}}{{.reason}}{{"\t"}}{{.type}}{{"\t"}}{{.firstTimestamp}}{{"\n"}}{{end}}'
+
+kubectl get events -o json "$@" | jq -r  '.items | map(. + {t: (.eventTime//.lastTimestamp)}) | sort_by(.t)[] | [.t, .metadata.namespace, .type, .reason, .involvedObject.kind + "/" + .involvedObject.name, .source.component + "," + (.source.host//"-"), .message] | @tsv' | column -s $'\t' -t
+
+kubectl get events --field-selector involvedObject.name=nginx-deployment-576c6b7b6-mvhbg -o json | jq '.items[] | {reason, message, type, lastTimestamp}'
+
+kubectl get events  --sort-by='.lastTimestamp' --field-selector involvedObject.kind=Pod
+
+
+kubectl exec nginx-deployment-576c6b7b6-2s59p -it cat /proc/sys/net/netfilter/nf_conntrack_max
+
+
+az acr import --name myregistry --source docker.io/library/centos:centos7.9.2009 --image hello-world:latest
+docker pull centos:centos7.9.2009
+
+
+az acr import --name myregistry --source docker.io/library/centos:centos7.9.2009 --image tensorflow:latest-gpu --username theodorewxs --password xinxin150912
+
+
+theodorewxs
+xinxin150912
