@@ -616,8 +616,3 @@ az acr import --name myregistry --source docker.io/library/centos:centos7.9.2009
 docker pull centos:centos7.9.2009
 
 
-az acr import --name myregistry --source docker.io/library/centos:centos7.9.2009 --image tensorflow:latest-gpu --username theodorewxs --password xinxin150912
-
-
-theodorewxs
-xinxin150912
