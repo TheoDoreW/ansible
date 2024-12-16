@@ -568,7 +568,7 @@ azcopy list 'https://hctssa1.blob.core.windows.net/logfile?sv=2022-11-02&ss=bfqt
 
 
 
-kubectl debug node/aks-userpool1-42112520-vmss000003 -it --image=mcr.microsoft.com/cbl-mariner/busybox:2.0
+kubectl debug node/aks-userpool-65934306-vmss000003 -it --image=mcr.microsoft.com/cbl-mariner/busybox:2.0
 
 
 
@@ -612,7 +612,212 @@ kubectl get events  --sort-by='.lastTimestamp' --field-selector involvedObject.k
 kubectl exec nginx-deployment-576c6b7b6-2s59p -it cat /proc/sys/net/netfilter/nf_conntrack_max
 
 
-az acr import --name myregistry --source docker.io/library/centos:centos7.9.2009 --image hello-world:latest
+az acr import --name tpacr1 --source docker.io/library/chester2004/get-storage --image get-storage:latest --username theodorewxs --password xinxin150912
 docker pull centos:centos7.9.2009
 
 
+
+# Include these variables to access key vault secrets from a pod in the cluster.
+export KEYVAULT_NAME="keyvault-workload-id"
+export KEYVAULT_SECRET_NAME="my-secret"
+
+kubectl create ns podmi
+kubectl config set-context --current --namespace=podmi
+kubectl config view --minify
+
+export RESOURCE_GROUP=tprg
+export LOCATION="brazilsouth"
+export CLUSTER_NAME="tpaks1"
+export SERVICE_ACCOUNT_NAMESPACE="podmi"
+export SERVICE_ACCOUNT_NAME="podmisa1"
+export SUBSCRIPTION="$(az account show --query id --output tsv)"
+export USER_ASSIGNED_IDENTITY_NAME="tpaks1podmi1"
+export FEDERATED_IDENTITY_CREDENTIAL_NAME="tpaks1podfi1"
+export AKS_OIDC_ISSUER="$(az aks show --name tpaks1 --resource-group tprg --query "oidcIssuerProfile.issuerUrl" --output tsv)"
+export USER_ASSIGNED_CLIENT_ID="$(az identity show --resource-group tprg --name tpaks1podmi1 --query 'clientId' --output tsv)"
+
+az aks update --resource-group tprg --name tpaks1 --enable-oidc-issuer --enable-workload-identity
+export AKS_OIDC_ISSUER="$(az aks show --name tpaks1 --resource-group tprg --query "oidcIssuerProfile.issuerUrl" --output tsv)"
+az identity create --name "${USER_ASSIGNED_IDENTITY_NAME}" --resource-group "${RESOURCE_GROUP}" --location "${LOCATION}" --subscription "${SUBSCRIPTION}"
+export USER_ASSIGNED_CLIENT_ID="$(az identity show --resource-group tprg --name tpaks1podmi1 --query 'clientId' --output tsv)"
+
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    azure.workload.identity/client-id: "${USER_ASSIGNED_CLIENT_ID}"
+  name: "podmisa1"
+  namespace: "podmi"
+EOF
+
+az identity federated-credential create --name ${FEDERATED_IDENTITY_CREDENTIAL_NAME} --identity-name "${USER_ASSIGNED_IDENTITY_NAME}" --resource-group "${RESOURCE_GROUP}" --issuer "${AKS_OIDC_ISSUER}" --subject system:serviceaccount:"${SERVICE_ACCOUNT_NAMESPACE}":"${SERVICE_ACCOUNT_NAME}" --audience api://AzureADTokenExchange
+
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blob-reader
+  namespace: podmi
+  labels:
+    azure.workload.identity/use: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blob-reader
+  template:
+    metadata:
+      labels:
+        app: blob-reader
+    spec:
+      serviceAccountName: podmisa1
+      containers:
+        - name: blob-reader
+          image: mcr.microsoft.com/azure-cli
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - >
+              while true; do
+                az login --identity --username 548393f6-2173-4ee3-9dfd-f6795bd84f94; 
+                az storage blob list --account-name tpsa1 --container-name data; 
+                sleep 30;
+              done
+
+az login --identity --username e28fba50-a13d-4c63-afa9-b0d07afe2c32 --debug
+
+
+az login --identity --username <client_id|object_id|resource_id>
+
+
+kubectl exec --stdin --tty get-storage-8584b5c548-8ktrd -- /bin/bash
+
+
+
+curl -s -H Metadata:true --noproxy "*" "http://169.254.169.254/metadata/identity/oauth2/token?resource=https%3A%2F%2Fmanagement.core.windows.net%2F&api-version=2018-02-01&client_id=client_id" | jq
+
+
+az aks connection create storage-blob --workload-identity <user-identity-resource-id>
+az aks connection create storage-blob --workload-identity 
+az login --identity --username /subscriptions/22c02293-b20b-4712-b48d-b974afcb50c0/resourcegroups/tprg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/tpaks1podmi1
+
+
+cat <<EOF | kubectl apply -f -
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sample-workload-identity
+  namespace: ${SERVICE_ACCOUNT_NAMESPACE}
+  labels:
+    azure.workload.identity/use: "true"
+spec:
+  serviceAccountName: ${SERVICE_ACCOUNT_NAME}
+  containers:
+    - image: mcr.microsoft.com/azure-cli
+      name: azure-cli
+      ports:
+        - containerPort: 80
+EOF
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: get-storage
+  labels:
+    app: get-storage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: get-storage
+  template:
+    metadata:
+      labels:
+        app: get-storage
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: podmisa1
+      containers:
+        - name: get-storage
+          image: chester2004/get-storage
+          ports:
+            - containerPort: 8080
+
+GET http://10.11.0.19:8080/api/tpsa1/data/198712.txt
+
+
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blob-reader
+  namespace: podmi
+  labels:
+    azure.workload.identity/use: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blob-reader
+  template:
+    metadata:
+      labels:
+        app: blob-reader
+    spec:
+      serviceAccountName: podmisa1
+      containers:
+        - name: blob-reader
+          image: mcr.microsoft.com/azure-cli
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - >
+              while true; do
+                sleep 30;
+              done
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blob-reader
+  labels:
+    app: blob-reader
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blob-reader
+  template:
+    metadata:
+      labels:
+        app: blob-reader
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: podmisa1
+      containers:
+        - name: blob-reader
+          image: mcr.microsoft.com/azure-cli
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - >
+              while true; do
+                sleep 30;
+              done
+
+
+
+az login --federated-token "$(cat /var/run/secrets/azure/tokens/azure-identity-token)" --service-principal -u "e28fba50-a13d-4c63-afa9-b0d07afe2c32" -t "16b3c013-d300-468d-ac64-7eda0820b6d3"
+az storage blob list --account-name tpsa1 --container-name data --auth-mode login
+
+
+az aks show --name tpaks1 --resource-group tprg --query identity.type --output tsv
+az aks show --resource-group tprg --name tpaks1 --query "identity"
