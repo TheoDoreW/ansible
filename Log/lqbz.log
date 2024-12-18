@@ -821,3 +821,18 @@ az storage blob list --account-name tpsa1 --container-name data --auth-mode logi
 
 az aks show --name tpaks1 --resource-group tprg --query identity.type --output tsv
 az aks show --resource-group tprg --name tpaks1 --query "identity"
+
+
+f3AB2bzaforAAWQb
+
+
+server {
+    listen              443 ssl;
+    server_name         www.example.com;
+    ssl_certificate     /home/azureuser/server.cer;
+    ssl_certificate_key /home/azureuser/server.key;
+    ssl_protocols       TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+}
+
+Get-AzApplicationGatewayBackendHealth -Name "tpappgw1" -ResourceGroupName "tprg"
