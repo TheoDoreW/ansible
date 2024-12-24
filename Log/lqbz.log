@@ -815,7 +815,6 @@ spec:
 
 
 
-az login --federated-token "$(cat /var/run/secrets/azure/tokens/azure-identity-token)" --service-principal -u "e28fba50-a13d-4c63-afa9-b0d07afe2c32" -t "16b3c013-d300-468d-ac64-7eda0820b6d3"
 az storage blob list --account-name tpsa1 --container-name data --auth-mode login
 
 
