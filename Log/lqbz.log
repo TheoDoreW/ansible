@@ -834,9 +834,9 @@ server {
     ssl_ciphers         HIGH:!aNULL:!MD5;
 }
 
-az network application-gateway show --resource-group tprg --name tpappgw1
-az network application-gateway stop --resource-group tprg --name tpappgw1
-az network application-gateway start --resource-group tprg --name tpappgw1
+az network application-gateway show --resource-group tprg --name tpappgw1 -otable
+az network application-gateway stop --resource-group tprg --name tpappgw1 -otable
+az network application-gateway start --resource-group tprg --name tpappgw1 -otable
 
 
 local er -- cn3hub -- cn3spoke
