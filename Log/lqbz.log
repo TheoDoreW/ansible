@@ -877,4 +877,9 @@ az network vnet-gateway delete -g dsrg -n dscn2hubvnet1vng1 --no-wait
 az network vnet-gateway show -g dsrg -n dscn2hubvnet1vng1
 
 
-route -p add 10.32.0.0 MASK 255.255.0.0 172.16.1.2
+
+
+
+
+
+
