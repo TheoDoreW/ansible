@@ -838,8 +838,6 @@ az network application-gateway show --resource-group tprg --name tpappgw1
 az network application-gateway stop --resource-group tprg --name tpappgw1
 az network application-gateway start --resource-group tprg --name tpappgw1
 
-dscn3hubvnet1-peering-to-dscn2spokevnet1
-/subscriptions/15e95d2e-6cd0-4d1c-96da-b8e055a62ee8/resourceGroups/dsrg/providers/Microsoft.Network/virtualNetworks/dscn3spokevnet1
 
 local er -- cn3hub -- cn3spoke
 
@@ -847,7 +845,8 @@ local -- cn3spoke????
 
 dscn3hubvnet1 10.21.0.0/16
 dscn3spokevnet1 10.22.0.0/16
-dscn2spokevnet1 10.23.0.0/16
+dscn2hubvnet1 10.31.0.0/16
+dscn2spokevnet1 10.32.0.0/16
 
 dscn3hubvnet1-peering-to-dscn3spokevnet1
 dscn3spokevnet1-peering-to-dscn3hubvnet1
@@ -860,12 +859,19 @@ az network vnet subnet create --vnet-name dscn2spokevnet1 -n GatewaySubnet -g ds
 az network public-ip create --name dscn2spokevnet1vng1pip1 --resource-group dsrg --location chinanorth2 --allocation-method Static --sku Standard --version IPv4
 az network public-ip delete -g dsrg -n dscn2spokevnet1vng1pip1
 az network vnet-gateway create --name dscn2spokevnet1vng1 --location chinanorth2 --public-ip-addresses dscn2spokevnet1vng1pip1 --resource-group dsrg --vnet dscn2spokevnet1 --gateway-type Vpn --vpn-type RouteBased --sku VpnGw1 --vpn-gateway-generation Generation1 --no-wait
-az network vnet-gateway delete -g dsrg -n dscn2spokevnet1vng1
+az network vnet-gateway delete -g dsrg -n dscn2spokevnet1vng1 --no-wait
 az network vnet-gateway show -g dsrg -n dscn2spokevnet1vng1
 
 az network vnet subnet create --vnet-name dscn3spokevnet1 -n GatewaySubnet -g dsrg --address-prefix 10.22.1.0/24
 az network public-ip create --name dscn3spokevnet1vng1pip1 --resource-group dsrg --location chinanorth3 --allocation-method Static --sku Standard --version IPv4
 az network public-ip delete -g dsrg -n dscn3spokevnet1vng1pip1
 az network vnet-gateway create --name dscn3spokevnet1vng1 --location chinanorth3 --public-ip-addresses dscn3spokevnet1vng1pip1 --resource-group dsrg --vnet dscn3spokevnet1 --gateway-type Vpn --vpn-type RouteBased --sku VpnGw1 --vpn-gateway-generation Generation1 --no-wait
-az network vnet-gateway delete -g dsrg -n dscn3spokevnet1vng1
+az network vnet-gateway delete -g dsrg -n dscn3spokevnet1vng1 --no-wait
 az network vnet-gateway show -g dsrg -n dscn3spokevnet1vng1
+
+az network vnet subnet create --vnet-name dscn2hubvnet1 -n GatewaySubnet -g dsrg --address-prefix 10.31.1.0/24
+az network public-ip create --name dscn2hubvnet1vng1pip1 --resource-group dsrg --location chinanorth2 --allocation-method Static --sku Standard --version IPv4
+az network public-ip delete -g dsrg -n dscn3spokevnet1vng1pip1
+az network vnet-gateway create --name dscn2hubvnet1vng1 --location chinanorth2 --public-ip-addresses dscn2hubvnet1vng1pip1 --resource-group dsrg --vnet dscn2hubvnet1 --gateway-type Vpn --vpn-type RouteBased --sku VpnGw1 --vpn-gateway-generation Generation1 --no-wait
+az network vnet-gateway delete -g dsrg -n dscn2hubvnet1vng1 --no-wait
+az network vnet-gateway show -g dsrg -n dscn2hubvnet1vng1
