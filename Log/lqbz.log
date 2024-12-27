@@ -838,7 +838,7 @@ az network application-gateway show --resource-group tprg --name tpappgw1 -otabl
 az network application-gateway stop --resource-group tprg --name tpappgw1
 az network application-gateway start --resource-group tprg --name tpappgw1 
 
-local er -- cn3hub -- cn3spoke
+cn2spoke -- cn2hub --- cn3hub -- cn3spoke
 
 local -- cn3spoke???? 
 
@@ -875,6 +875,7 @@ az network public-ip delete -g dsrg -n dscn3spokevnet1vng1pip1
 az network vnet-gateway create --name dscn2hubvnet1vng1 --location chinanorth2 --public-ip-addresses dscn2hubvnet1vng1pip1 --resource-group dsrg --vnet dscn2hubvnet1 --gateway-type Vpn --vpn-type RouteBased --sku VpnGw1 --vpn-gateway-generation Generation1 --no-wait
 az network vnet-gateway delete -g dsrg -n dscn2hubvnet1vng1 --no-wait
 az network vnet-gateway show -g dsrg -n dscn2hubvnet1vng1
+
 
 
 
