@@ -702,7 +702,7 @@ curl -s -H Metadata:true --noproxy "*" "http://169.254.169.254/metadata/identity
 
 az aks connection create storage-blob --workload-identity <user-identity-resource-id>
 az aks connection create storage-blob --workload-identity 
-az login --identity --username /subscriptions/22c02293-b20b-4712-b48d-b974afcb50c0/resourcegroups/tprg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/tpaks1podmi1
+
 
 
 cat <<EOF | kubectl apply -f -
@@ -878,7 +878,7 @@ az network vnet-gateway show -g dsrg -n dscn2hubvnet1vng1
 
 
 
-
+Any region that doesn't have a paired region
 
 
 
