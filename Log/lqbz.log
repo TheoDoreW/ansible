@@ -612,7 +612,7 @@ kubectl get events  --sort-by='.lastTimestamp' --field-selector involvedObject.k
 kubectl exec nginx-deployment-576c6b7b6-2s59p -it cat /proc/sys/net/netfilter/nf_conntrack_max
 
 
-az acr import --name tpacr1 --source docker.io/library/chester2004/get-storage --image get-storage:latest --username theodorewxs --password xinxin150912
+az acr import --name tpacr1 --source docker.io/library/chester2004/get-storage --image get-storage:latest --username theodorewxs --password 
 docker pull centos:centos7.9.2009
 
 
@@ -682,12 +682,12 @@ spec:
           args:
             - >
               while true; do
-                az login --identity --username 548393f6-2173-4ee3-9dfd-f6795bd84f94; 
+                az login --identity --username 548393f6-2f94; 
                 az storage blob list --account-name tpsa1 --container-name data; 
                 sleep 30;
               done
 
-az login --identity --username e28fba50-a13d-4c63-afa9-b0d07afe2c32 --debug
+az login --identity --username e28fba50-a13d --debug
 
 
 az login --identity --username <client_id|object_id|resource_id>
@@ -699,9 +699,19 @@ kubectl exec --stdin --tty get-storage-8584b5c548-8ktrd -- /bin/bash
 
 curl -s -H Metadata:true --noproxy "*" "http://169.254.169.254/metadata/identity/oauth2/token?resource=https%3A%2F%2Fmanagement.core.windows.net%2F&api-version=2018-02-01&client_id=client_id" | jq
 
+GET https://management.azure.com/subscriptions/subscriptionId/providers/Microsoft.ResourceHealth/events?api-version=2024-02-01&$filter=service eq 'Virtual Machines' or region eq 'West US'&queryStartTime=7/24/2020
+
+token=$(az account get-access-token --resource=https://management.azure.com | jq -r .accessToken) 
+curl -X GET --header "Authorization: Bearer $token" "https://management.azure.com/subscriptions//providers/Microsoft.ResourceHealth/events?api-version=2024-02-01&$filter=service\ eq\ 'Virtual Machines'&queryStartTime=1/1/2025"
+
+GET https://management.azure.com/subscriptions//providers/Microsoft.ResourceHealth/events?api-version=2024-02-01&$filter=service eq 'Virtual Machines' or region eq 'West US'&queryStartTime=7/24/2020
+curl -X GET --header "Authorization: Bearer $token" "https://management.azure.com/subscriptions//providers/Microsoft.ResourceHealth/events?api-version=2024-02-01&$filter=service%20eq%20'Virtual%20Machines'%20or%20region%20eq%20'Brazil%20South'&queryStartTime=1/1/2025"
+curl -X GET --header "Authorization: Bearer $token" "https://management.azure.com/subscriptions//resourceGroups/tprg/providers/Microsoft.Compute/virtualMachines/d2v5vm1/providers/Microsoft.ResourceHealth/events?api-version=2024-02-01"
 
 az aks connection create storage-blob --workload-identity <user-identity-resource-id>
 az aks connection create storage-blob --workload-identity 
+
+GET https://management.azure.com/subscriptions/22c02293-b20b-4712-b48d-b974afcb50c0/resourceGroups/rhctestenv/providers/Microsoft.Compute/virtualMachines/rhctestenvV1PI/providers/Microsoft.ResourceHealth/events?api-version=2024-02-01
 
 
 
@@ -851,7 +861,7 @@ dscn3hubvnet1-peering-to-dscn3spokevnet1
 dscn3spokevnet1-peering-to-dscn3hubvnet1
 dscn2hubvnet1-peering-to-dscn2spokevnet1
 dscn2spokevnet1-peering-to-dscn3hubvnet1
-Microsoft2024
+
 
 az network vnet-gateway show -g dsrg -n dscn3hubvnet1vng1
 
@@ -879,7 +889,6 @@ az network vnet-gateway show -g dsrg -n dscn2hubvnet1vng1
 
 
 Any region that doesn't have a paired region
-
 
 
 
