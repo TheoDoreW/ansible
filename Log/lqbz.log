@@ -616,11 +616,28 @@ az acr import --name tpacr1 --source docker.io/library/chester2004/get-storage -
 docker pull centos:centos7.9.2009
 
 
+<<<<<<< HEAD
+az acr import --name tpacr1 --source docker.io/library/centos:centos7.9.2009 --image centos:centos7.9.2009 --username theodorewxs --password xinxin150912
+=======
+>>>>>>> 2242199ac6d5f93732c577342175bfd4602fde44
 
+<<<<<<< HEAD
+tpacr1.azurecr.io/centos:centos7.9.2009
+=======
 # Include these variables to access key vault secrets from a pod in the cluster.
 export KEYVAULT_NAME="keyvault-workload-id"
 export KEYVAULT_SECRET_NAME="my-secret"
+>>>>>>> 2242199ac6d5f93732c577342175bfd4602fde44
 
+<<<<<<< HEAD
+export IDENTITY_RESOURCE_GROUP="tprg"
+export IDENTITY_NAME="tpaks1podmi1"
+az identity create -g tprg -n tpaks1podmi1 -o json 
+export IDENTITY_CLIENT_ID="$(az identity show --resource-group ${IDENTITY_RESOURCE_GROUP} --name ${IDENTITY_NAME} --query clientId -o tsv)"
+export IDENTITY_RESOURCE_ID="$(az identity show --resource-group ${IDENTITY_RESOURCE_GROUP} --name ${IDENTITY_NAME} --query id -o tsv)"
+az aks update --resource-group tprg --name tpaks1 --enable-pod-identity
+
+=======
 kubectl create ns podmi
 kubectl config set-context --current --namespace=podmi
 kubectl config view --minify
@@ -889,7 +906,6 @@ az network vnet-gateway show -g dsrg -n dscn2hubvnet1vng1
 
 
 Any region that doesn't have a paired region
-
 
 
 
