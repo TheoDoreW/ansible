@@ -616,28 +616,11 @@ az acr import --name tpacr1 --source docker.io/library/chester2004/get-storage -
 docker pull centos:centos7.9.2009
 
 
-<<<<<<< HEAD
-az acr import --name tpacr1 --source docker.io/library/centos:centos7.9.2009 --image centos:centos7.9.2009 --username theodorewxs --password xinxin150912
-=======
->>>>>>> 2242199ac6d5f93732c577342175bfd4602fde44
 
-<<<<<<< HEAD
-tpacr1.azurecr.io/centos:centos7.9.2009
-=======
 # Include these variables to access key vault secrets from a pod in the cluster.
 export KEYVAULT_NAME="keyvault-workload-id"
 export KEYVAULT_SECRET_NAME="my-secret"
->>>>>>> 2242199ac6d5f93732c577342175bfd4602fde44
 
-<<<<<<< HEAD
-export IDENTITY_RESOURCE_GROUP="tprg"
-export IDENTITY_NAME="tpaks1podmi1"
-az identity create -g tprg -n tpaks1podmi1 -o json 
-export IDENTITY_CLIENT_ID="$(az identity show --resource-group ${IDENTITY_RESOURCE_GROUP} --name ${IDENTITY_NAME} --query clientId -o tsv)"
-export IDENTITY_RESOURCE_ID="$(az identity show --resource-group ${IDENTITY_RESOURCE_GROUP} --name ${IDENTITY_NAME} --query id -o tsv)"
-az aks update --resource-group tprg --name tpaks1 --enable-pod-identity
-
-=======
 kubectl create ns podmi
 kubectl config set-context --current --namespace=podmi
 kubectl config view --minify
@@ -908,4 +891,51 @@ az network vnet-gateway show -g dsrg -n dscn2hubvnet1vng1
 Any region that doesn't have a paired region
 
 
+就是在21v部署global的这个镜像 Silver Peak Unity EdgeConnect 9.2.4.0 - x64 Gen1
+Microsoft2025
+Source image publisher silver-peak-systems
+Source image offer silver_peak_edgeconnect
+Source image planedgeconnect_9_2_4_0_94650
 
+
+subscriptionId=
+targetSnapshotName=rocky1osss1
+sourceSnapshotResourceId=
+targetRegion=chinanorth3
+
+
+az disk show -g silver -n rocky1_OsDisk_1_18effa4179254acc91aa97bd165d96a9 --query id --output tsv
+
+
+ResourceGroupName=silver
+snapshotName=rocky1_OsDisk_SS1
+
+ResourceGroupName=rockyrg
+targetStorageAccountName=rockysa1
+imageStorageContainerName=rockyss
+imageBlobName="rocky1_OsDisk.vhd"
+snapshotSasUrl="
+
+
+snapshotName="rockyosss1"
+az snapshot create -g rockyrg -n $snapshotName -l chinanorth3 --source-storage-account-id  --source 
+az snapshot create -g MyResourceGroup -n MySnapshot --source 
+
+az vm create \
+  --resource-group rockyrg \
+  --name rocky1 \
+  --image /subscriptions//resourceGroups/rockyrg/providers/Microsoft.Compute/images/rockyimage1 \
+  --size Standard_D2as_v5 --plan-name rocky-linux-8_5 --plan-product rocky_linux_8_5 --plan-publisher yungoalbj
+  
+az image create --resource-group rockyrg --name rockyimage1 --source  --os-type  Linux --location chinanorth3
+
+
+az vm show --name vm1 --resource-group silver --query 'networkProfile.networkInterfaces[].id' --output tsv
+
+
+
+
+
+
+
+az sshkey list --resource-group xinshengrg
