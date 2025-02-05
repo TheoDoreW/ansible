@@ -937,5 +937,3 @@ az vm show --name vm1 --resource-group silver --query 'networkProfile.networkInt
 
 
 
-
-az sshkey list --resource-group xinshengrg
