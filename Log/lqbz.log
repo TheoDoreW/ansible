@@ -934,6 +934,12 @@ az vm show --name vm1 --resource-group silver --query 'networkProfile.networkInt
 
 
 
+AzureUser
 
 
+
+
+azure file 2 sync；
+DDVE
+k8s数据迁移工具；
 
