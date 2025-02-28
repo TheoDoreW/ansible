@@ -947,3 +947,9 @@ k8s数据迁移工具；
 az login
 subscriptionId=$(az account show --query id --output tsv)
 az ad sp create-for-rbac -n "jshbsp1" --role "Owner" --scopes /subscriptions/$subscriptionId
+
+
+
+az group create --name "hciboxrg1"  --location "eastus2"
+az deployment group create -g "hciboxrg1" -f "main.bicep" -p "main.parameters.json"
+az group delete -n hciboxrg --no-wait --yes
