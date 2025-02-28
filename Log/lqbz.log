@@ -943,3 +943,7 @@ azure file 2 sync；
 DDVE
 k8s数据迁移工具；
 
+
+az login
+subscriptionId=$(az account show --query id --output tsv)
+az ad sp create-for-rbac -n "jshbsp1" --role "Owner" --scopes /subscriptions/$subscriptionId
