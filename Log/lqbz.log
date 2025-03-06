@@ -935,20 +935,20 @@ az vm show --name vm1 --resource-group silver --query 'networkProfile.networkInt
 
 
 AzureUser
+Microsoft2025
 
+az vm list-usage --location eastus2 --output table
 
+az login
+subscriptionId=$(az account show --query id --output tsv)
+az ad sp create-for-rbac -n "hciboxsp1" --role "Owner" --scopes /subscriptions/$subscriptionId
 
-
-azure file 2 sync；
-DDVE
-k8s数据迁移工具；
+{
 
 
 az login
 subscriptionId=$(az account show --query id --output tsv)
 az ad sp create-for-rbac -n "jshbsp1" --role "Owner" --scopes /subscriptions/$subscriptionId
-
-
 
 
 
