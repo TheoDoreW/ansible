@@ -711,7 +711,7 @@ curl -X GET --header "Authorization: Bearer $token" "https://management.azure.co
 az aks connection create storage-blob --workload-identity <user-identity-resource-id>
 az aks connection create storage-blob --workload-identity 
 
-GET https://management.azure.com/subscriptions/22c02293-b20b-4712-b48d-b974afcb50c0/resourceGroups/rhctestenv/providers/Microsoft.Compute/virtualMachines/rhctestenvV1PI/providers/Microsoft.ResourceHealth/events?api-version=2024-02-01
+GET https://management.azure.com/subscriptions/ /resourceGroups/rhctestenv/providers/Microsoft.Compute/virtualMachines/rhctestenvV1PI/providers/Microsoft.ResourceHealth/events?api-version=2024-02-01
 
 
 
@@ -951,7 +951,7 @@ subscriptionId=$(az account show --query id --output tsv)
 az ad sp create-for-rbac -n "jshbsp1" --role "Owner" --scopes /subscriptions/$subscriptionId
 
 
-/subscriptions/22c02293-b20b-4712-b48d-b974afcb50c0/resourceGroups/tprg/providers/Microsoft.Network/applicationGateways/tpappgw1
+/subscriptions/ /resourceGroups/tprg/providers/Microsoft.Network/applicationGateways/tpappgw1
 appgwId=$(az network application-gateway show --name tpappgw1 --resource-group tprg -o tsv --query "id") 
 az aks enable-addons --name tpaks1 --resource-group tprg --addon ingress-appgw --appgw-id $appgwId
 
@@ -974,7 +974,7 @@ az network vnet subnet create \
     --name $APPGW_SUBNET_NAME \
     --address-prefixes "10.226.0.0/23"
 
-APPGW_SUBNET_ID="/subscriptions/22c02293-b20b-4712-b48d-b974afcb50c0/resourceGroups/tprg/providers/Microsoft.Network/virtualNetworks/tpvnet1/subnets/APPGW"
+APPGW_SUBNET_ID="/subscriptions//resourceGroups/tprg/providers/Microsoft.Network/virtualNetworks/tpvnet1/subnets/APPGW"
 
 
 az network application-gateway create \
@@ -1021,10 +1021,10 @@ az role assignment create --assignee-object-id $IDENTITY_PRINCIPAL_ID --assignee
 az role assignment create --assignee-object-id $IDENTITY_PRINCIPAL_ID --assignee-principal-type ServicePrincipal --scope $nodeResourceGroupId --role "Contributor"
 az role assignment create --assignee-object-id $IDENTITY_PRINCIPAL_ID --assignee-principal-type ServicePrincipal --scope $APPGW_ID --role "Contributor"
 
-/subscriptions/22c02293-b20b-4712-b48d-b974afcb50c0/resourceGroups/tprg/providers/Microsoft.Network/applicationGateways/tpappgw1
-/subscriptions/22c02293-b20b-4712-b48d-b974afcb50c0/resourceGroups/tprg/providers/Microsoft.Network/applicationGateways/tpappgw2
+/subscriptions/ /resourceGroups/tprg/providers/Microsoft.Network/applicationGateways/tpappgw1
+/subscriptions/ /resourceGroups/tprg/providers/Microsoft.Network/applicationGateways/tpappgw2
 
-APPGW_ID=/subscriptions/22c02293-b20b-4712-b48d-b974afcb50c0/resourceGroups/tprg/providers/Microsoft.Network/applicationGateways/tpappgw1
+APPGW_ID=/subscriptions/ /resourceGroups/tprg/providers/Microsoft.Network/applicationGateways/tpappgw1
 
 helm install azure-application-gateway-tpappgw1 --namespace tpappgw1agic \
   oci://mcr.microsoft.com/azure-application-gateway/charts/ingress-azure \
@@ -1048,9 +1048,9 @@ metadata:
 spec:
   controller: azure/application-gateway
   parameters:
-    appgw.applicationGatewayID: "/subscriptions/22c02293-b20b-4712-b48d-b974afcb50c0/resourceGroups/tprg/providers/Microsoft.Network/applicationGateways/tpappgw1"
+    appgw.applicationGatewayID: "/subscriptions//resourceGroups/tprg/providers/Microsoft.Network/applicationGateways/tpappgw1"
     armAuth.type: workloadIdentity
-    armAuth.identityClientID: "e28fba50-a13d-4b3b-8b3b-7b3b3b3b3b3b"
+    armAuth.identityClientID: ""
     rbac.enabled: "true"
 
 
@@ -1078,9 +1078,9 @@ metadata:
   name: azure-application-gateway-tpappgw1-config
   namespace: tpappgw1agic
 data:
-  appgw.applicationGatewayID: "/subscriptions/22c02293-b20b-4712-b48d-b974afcb50c0/resourceGroups/tprg/providers/Microsoft.Network/applicationGateways/tpappgw1"
+  appgw.applicationGatewayID: "/subscriptions//resourceGroups/tprg/providers/Microsoft.Network/applicationGateways/tpappgw1"
   armAuth.type: workloadIdentity
-  armAuth.identityClientID: "e28fba50-a13d-4b3b-8b3b-7b3b3b3b3b3b"
+  armAuth.identityClientID: ""
   rbac.enabled: "true"
 
 
@@ -1153,6 +1153,7 @@ data:
   armAuth.type: workloadIdentity
   armAuth.identityClientID: "your-private-client-id"
   rbac.enabled: "true"
+
 
 
 
