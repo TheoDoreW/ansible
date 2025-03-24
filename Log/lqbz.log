@@ -1157,10 +1157,18 @@ data:
 
 
 
-
-按照订阅分割，多租户，多用户；
-ingress controller：appgw or approuting
-aks cni
-
-Empty Dir log 怎么输出；
+helm install tpappgw1agic oci://mcr.microsoft.com/azure-application-gateway/charts/ingress-azure \
+    --version 1.8.0 \
+    --namespace tpappgw1agic \
+    --debug \
+    --set appgw.name=tpappgw1 \
+    --set appgw.resourceGroup=tprg \
+    --set appgw.subscriptionId=22c02293-b20b-4712-b48d-b974afcb50c0 \
+    --set appgw.shared=false \
+    --set armAuth.type=workloadIdentity \
+    --set armAuth.identityClientID=e28fba50-a13d-4b3b-8b3b-7b3b3b3b3b3b \
+    --set rbac.enabled=true \
+    --set verbosityLevel=3 \
+    --set kubernetes.watchNamespace=tpappgw1agic \
+    --set ingressClassName=azure-application-gateway-tpappgw2
 
