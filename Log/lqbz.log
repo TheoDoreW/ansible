@@ -1170,5 +1170,70 @@ helm install tpappgw1agic oci://mcr.microsoft.com/azure-application-gateway/char
     --set rbac.enabled=true \
     --set verbosityLevel=3 \
     --set kubernetes.watchNamespace=tpappgw1agic \
-    --set ingressClassName=azure-application-gateway-tpappgw2
+    --set kubernetes.ingressClassName=azure-application-gateway-tpappgw1
 
+
+helm install tpappgw2agic oci://mcr.microsoft.com/azure-application-gateway/charts/ingress-azure \
+    --version 1.7.5 \
+    --namespace tpappgw2agic \
+    --debug \
+    --set appgw.name=tpappgw2 \
+    --set appgw.resourceGroup=tprg \
+    --set appgw.subscriptionId=22c02293-b20b-4712-b48d-b974afcb50c0 \
+    --set appgw.shared=false \
+    --set armAuth.type=workloadIdentity \
+    --set armAuth.identityClientID=e28fba50-a13d-4b3b-8b3b-7b3b3b3b3b3b \
+    --set rbac.enabled=true \
+    --set verbosityLevel=3 \
+    --set kubernetes.watchNamespace=tpappgw1agic \
+    --set kubernetes.ingressClassName=azure-application-gateway-tpappgw1
+
+
+
+
+
+
+verbosityLevel: 3
+appgw:
+    subscriptionId: 22c02293-b20b-4712-b48d-b974afcb50c0
+    resourceGroup: tprg
+    name: tpappgw1
+    usePrivateIP: false
+
+    # Setting appgw.shared to "true" will create an AzureIngressProhibitedTarget CRD.
+    # This prohibits AGIC from applying config for any host/path.
+    # Use "kubectl get AzureIngressProhibitedTargets" to view and change this.
+    shared: false
+
+################################################################################
+# Specify which kubernetes namespace the ingress controller will watch
+# Default value is "default"
+# Leaving this variable out or setting it to blank or empty string would
+# result in Ingress Controller observing all acessible namespaces.
+#
+# kubernetes:
+#   watchNamespace: <namespace>
+
+################################################################################
+# Specify the authentication with Azure Resource Manager
+#
+# Two authentication methods are available:
+# - Option 1: AAD-Pod-Identity (https://github.com/Azure/aad-pod-identity)
+armAuth:
+    type: aadPodIdentity
+    identityResourceID: /subscriptions/65cce562-04b0-4922-a21e-7fba834389a7/resourceGroups/decathlon/providers/Microsoft.ManagedIdentity/userAssignedIdentities/<>
+    identityClientID:  <>
+
+## Alternatively you can use Service Principal credentials
+# armAuth:
+#    type: servicePrincipal
+#    secretJSON: <<Generate this value with: "az ad sp create-for-rbac --subscription <subscription-uuid> --sdk-auth | base64 -w0" >>
+
+################################################################################
+# Specify if the cluster is RBAC enabled or not
+rbac:
+    enabled: false # true/false
+
+
+kubernetes:
+    watchNamespace: agic1
