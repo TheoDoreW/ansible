@@ -974,7 +974,7 @@ az network vnet subnet create \
     --name $APPGW_SUBNET_NAME \
     --address-prefixes "10.226.0.0/23"
 
-APPGW_SUBNET_ID="/subscriptions//resourceGroups/tprg/providers/Microsoft.Network/virtualNetworks/tpvnet1/subnets/APPGW"
+APPGW_SUBNET_ID="/subscriptions/resourceGroups/tprg/providers/Microsoft.Network/virtualNetworks/tpvnet1/subnets/APPGW"
 
 
 az network application-gateway create \
@@ -1187,3 +1187,89 @@ helm install tpappgw2agic oci://mcr.microsoft.com/azure-application-gateway/char
     --set verbosityLevel=3 \
     --set kubernetes.watchNamespace=tpappgw1agic \
     --set kubernetes.ingressClassName=azure-application-gateway-tpappgw1
+
+
+####################################################################################################################################### 100.0%
+
+
+
+verbosityLevel: 3
+appgw:
+    subscriptionId: 22c02293-b20b-4712-b48d-b974afcb50c0
+    resourceGroup: tprg
+    name: tpappgw1
+    usePrivateIP: false
+    shared: false
+armAuth:
+    type: workloadIdentity
+    identityClientID:  c3053afe-c5ec-4971-b97e-fea2ffcbb41d
+rbac:
+    enabled: true
+kubernetes:
+    watchNamespace: tpappgw1agic
+
+helm install tpappgw1agic oci://mcr.microsoft.com/azure-application-gateway/charts/ingress-azure --version 1.8.0 --namespace tpappgw1agic -f helm-config-agic1.yaml
+helm install tpappgw2agic oci://mcr.microsoft.com/azure-application-gateway/charts/ingress-azure --version 1.8.0 --namespace tpappgw2agic -f helm-config-agic2.yaml
+
+
+helm uninstall tpappgw1agic
+helm uninstall tpappgw2agic
+
+
+test01@bddata01.onmicrosoft.com
+Wulo0412170
+
+
+
+# This file contains the essential configs for the ingress controller helm chart
+ 
+# Verbosity level of the App Gateway Ingress Controller
+verbosityLevel: 3
+ 
+################################################################################
+# Specify which application gateway the ingress controller will manage
+#
+appgw:
+    subscriptionId: d02ead13-610a-4745-b4bc-a38c9869741c
+    resourceGroup: appgw
+    name: v2
+    environment: AzureChinaCloud
+    usePrivateIP: false
+ 
+    # Setting appgw.shared to "true" will create an AzureIngressProhibitedTarget CRD.
+    # This prohibits AGIC from applying config for any host/path.
+    # Use "kubectl get AzureIngressProhibitedTargets" to view and change this.
+    shared: false
+ 
+################################################################################
+# Specify which kubernetes namespace the ingress controller will watch
+# Default value is "default"
+# Leaving this variable out or setting it to blank or empty string would
+# result in Ingress Controller observing all acessible namespaces.
+kubernetes:
+  watchNamespace: agic-v2
+  ingressClassResource:
+    name: agic-v2
+    enabled: true
+    default: false
+    controllerValue: "azure/application-gateway-v2"
+ 
+   
+################################################################################
+# Specify the authentication with Azure Resource Manager
+#
+# Two authentication methods are available:
+# - Option 1: AAD-Pod-Identity (https://github.com/Azure/aad-pod-identity)
+armAuth:
+    type: workloadIdentity
+    identityClientID:  c8c0564d-166c-4922-93fa-b655bb02dcca
+ 
+## Alternatively you can use Service Principal credentials
+# armAuth:
+#    type: servicePrincipal
+#    secretJSON: <<Generate this value with: "az ad sp create-for-rbac --subscription <subscription-uuid> --sdk-auth | base64 -w0" >>
+ 
+################################################################################
+# Specify if the cluster is RBAC enabled or not
+rbac:
+    enabled: false # true/false
