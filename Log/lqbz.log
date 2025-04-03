@@ -1273,3 +1273,15 @@ armAuth:
 # Specify if the cluster is RBAC enabled or not
 rbac:
     enabled: false # true/false
+
+
+
+# 若出站流量通过负载均衡器或NAT网关，而不是绑定在实例本身的公网IP，则IMDS不会显示出站流量的IP，通过公共服务查询：curl -s https://api.ipify.org
+
+
+curl -s -H Metadata:true --noproxy "*" "http://169.254.169.254/metadata/instance/network?api-version=2017-04-02" | jq
+
+az network public-ip create --resource-group tprg --name d2v5vm1-basicip --version IPv4 --sku Basic --allocation-method Static
+
+azureuser
+Microsoft2025
