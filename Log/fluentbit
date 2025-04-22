@@ -1,0 +1,655 @@
+# 获取 AKS 集群凭证
+az aks get-credentials --resource-group xsrg --name xsaks1
+
+# 获取 ADX 集群 URI
+ADX_URI=$(az kusto cluster show \
+  --name xsadx1 \
+  --resource-group xsrg \
+  --query uri -o tsv)
+
+echo "ADX URI: $ADX_URI"
+
+# 创建数据库
+az kusto database create \
+  --cluster-name xsadx1 \
+  --database-name nginx_logs \
+  --resource-group xsrg \
+  --read-write-database soft-delete-period=P365D hot-cache-period=P31D location=eastus
+
+# 在 Azure 门户中打开 ADX 集群，使用查询窗口执行以下 KQL 命令：
+// 创建存储 Nginx 日志的表
+.create table RawNginxLogs (
+    TimeGenerated: datetime,
+    Computer: string,
+    Log: string,
+    Stream: string,
+    ContainerID: string,
+    PodName: string,
+    Namespace: string,
+    NodeName: string
+)
+
+// 创建这个表的 JSON 映射
+.create table RawNginxLogs ingestion json mapping 'RawNginxLogsMapping' 
+'[{"column":"TimeGenerated", "path":"$.time", "datatype":"datetime"},{"column":"Computer", "path":"$.kubernetes.host", "datatype":"string"},{"column":"Log", "path":"$.log", "datatype":"string"},{"column":"Stream", "path":"$.stream", "datatype":"string"},{"column":"ContainerID", "path":"$.kubernetes.container_id", "datatype":"string"},{"column":"PodName", "path":"$.kubernetes.pod_name", "datatype":"string"},{"column":"Namespace", "path":"$.kubernetes.namespace_name", "datatype":"string"},{"column":"NodeName", "path":"$.kubernetes.host", "datatype":"string"}]'
+
+# 创建用户分配的托管身份
+az identity create \
+  --name fluent-bit-identity \
+  --resource-group xsrg
+
+# 获取托管身份的客户端 ID 和资源 ID
+IDENTITY_CLIENT_ID=$(az identity show \
+  --name fluent-bit-identity \
+  --resource-group xsrg \
+  --query clientId -o tsv)
+
+IDENTITY_RESOURCE_ID=$(az identity show \
+  --name fluent-bit-identity \
+  --resource-group xsrg \
+  --query id -o tsv)
+
+echo "Identity Client ID: $IDENTITY_CLIENT_ID"
+echo "Identity Resource ID: $IDENTITY_RESOURCE_ID"
+
+// 将托管身份添加为 ADX 数据库的摄取者
+.add database nginx_logs ingestors ('aadapp=ee9c5e5c-b3e2-4100-937e-2a301f80a900') 'Fluent Bit Identity'
+
+# 获取 AKS OIDC 发布者 URL
+AKS_OIDC_ISSUER=$(az aks show \
+  --name xsaks1 \
+  --resource-group xsrg \
+  --query "oidcIssuerProfile.issuerUrl" -o tsv)
+
+echo "AKS OIDC Issuer: $AKS_OIDC_ISSUER"
+
+# 创建联合身份凭证
+az identity federated-credential create \
+  --name aks-federated-identity \
+  --identity-name fluent-bit-identity \
+  --resource-group xsrg \
+  --issuer "${AKS_OIDC_ISSUER}" \
+  --subject "system:serviceaccount:logging:fluent-bit" \
+  --audience "api://AzureADTokenExchange"
+
+# 创建应用命名空间
+kubectl create namespace app
+
+# 创建 Nginx ConfigMap，配置日志格式
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: app
+data:
+  nginx.conf: |
+    user nginx;
+    worker_processes auto;
+    
+    error_log /var/log/nginx/error.log notice;
+    pid /var/run/nginx.pid;
+    
+    events {
+      worker_connections 1024;
+    }
+    
+    http {
+      include /etc/nginx/mime.types;
+      default_type application/octet-stream;
+      
+      # 定义日志格式
+      log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+      
+      access_log /var/log/nginx/access.log main;
+      
+      sendfile on;
+      keepalive_timeout 65;
+      
+      server {
+        listen 80;
+        server_name localhost;
+        
+        location / {
+          root /usr/share/nginx/html;
+          index index.html index.htm;
+        }
+        
+        location = /health {
+          access_log off;
+          return 200 'ok';
+        }
+        
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+          root /usr/share/nginx/html;
+        }
+      }
+    }
+EOF
+
+# 部署 Nginx
+cat <<EOF | kubectl apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.21.6
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  namespace: app
+spec:
+  selector:
+    app: nginx
+  ports:
+  - port: 80
+    targetPort: 80
+  type: LoadBalancer
+EOF
+
+# 创建日志命名空间
+kubectl create namespace logging
+
+# 创建 ServiceAccount 和 RBAC
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: fluent-bit
+  namespace: logging
+  annotations:
+    azure.workload.identity/client-id: "ee9c5e5c-b3e2-4100-937e-2a301f80a900"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: fluent-bit-role
+rules:
+  - apiGroups: [""]
+    resources:
+      - namespaces
+      - pods
+      - pods/logs
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: fluent-bit-role-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: fluent-bit-role
+subjects:
+  - kind: ServiceAccount
+    name: fluent-bit
+    namespace: logging
+EOF
+
+
+# 获取 ADX 摄取 URL
+ADX_INGEST_URL="https://ingest-xsadx1.eastus.kusto.windows.net"
+TENANT_ID=$(az account show --query tenantId -o tsv)
+
+# 创建 Fluent Bit 配置
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config
+  namespace: logging
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Flush        1
+        Log_Level    info
+        Daemon       off
+        HTTP_Server  On
+        HTTP_Listen  0.0.0.0
+        HTTP_Port    2020
+
+    [INPUT]
+        Name             tail
+        Tag              kube.app.*
+        Path             /var/log/containers/*_app_nginx-*.log
+        Parser           docker
+        DB               /var/log/flb_kube.db
+        Mem_Buf_Limit    5MB
+        Refresh_Interval 10
+
+    [FILTER]
+        Name                kubernetes
+        Match               kube.app.*
+        Kube_URL            https://kubernetes.default.svc:443
+        Kube_CA_File        /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        Kube_Token_File     /var/run/secrets/kubernetes.io/serviceaccount/token
+        Kube_Tag_Prefix     kube.app.
+        Merge_Log           On
+
+    [OUTPUT]
+        Name                    azure_kusto
+        Match                   kube.app.*
+        ingestion_endpoint      ${ADX_INGEST_URL}
+        tenant_id               ${TENANT_ID}
+        database_name           nginx_logs
+        table_name              RawNginxLogs
+        managed_identity_client_id  ${IDENTITY_CLIENT_ID}
+        ingestion_mapping_reference RawNginxLogsMapping
+        log_level               info
+EOF
+
+
+# Apply the new configuration
+cat <<EOF | kubectl apply -f -
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluent-bit
+  namespace: logging
+  labels:
+    k8s-app: fluent-bit-logging
+    version: v1
+spec:
+  selector:
+    matchLabels:
+      k8s-app: fluent-bit-logging
+  template:
+    metadata:
+      labels:
+        k8s-app: fluent-bit-logging
+        version: v1
+      annotations:
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: fluent-bit
+      containers:
+      - name: fluent-bit
+        image: fluent/fluent-bit:latest
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+        - name: fluent-bit-config
+          mountPath: /fluent-bit/etc/
+        resources:
+          limits:
+            memory: 300Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log
+      - name: varlibdockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
+      - name: fluent-bit-config
+        configMap:
+          name: fluent-bit-config
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/control-plane
+        effect: NoSchedule
+EOF
+
+# 获取 Nginx 服务 IP
+NGINX_IP=$(kubectl get svc nginx -n app -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+echo "Nginx IP: $NGINX_IP"
+
+# 生成一些流量
+for i in {1..10000}; do
+  curl -s "http://$NGINX_IP/"
+  curl -s "http://$NGINX_IP/not-found"
+  echo "Generated request batch $i"
+  sleep 10
+done
+
+// 查看原始日志
+RawNginxLogs
+| order by TimeGenerated desc
+| take 100
+
+// 解析 Nginx 访问日志
+RawNginxLogs
+| where Log startswith '1' or Log startswith '2' // 通常 Nginx 日志以 IP 地址开头
+| extend parsed = parse_regex(Log, @"^(\S+) - (\S+) \[([^\]]+)\] ""([^""]*)"" (\d+) (\d+) ""([^""]*)"" ""([^""]*)""( ""[^""]*"")?$")
+| extend 
+    RemoteAddr = tostring(parsed[0]),
+    RemoteUser = tostring(parsed[1]),
+    TimeLocal = tostring(parsed[2]),
+    Request = tostring(parsed[3]),
+    Status = toint(parsed[4]),
+    BodyBytesSent = toint(parsed[5]),
+    HttpReferer = tostring(parsed[6]),
+    HttpUserAgent = tostring(parsed[7])
+| project TimeGenerated, RemoteAddr, Request, Status, BodyBytesSent, HttpUserAgent, PodName, Namespace
+| order by TimeGenerated desc
+
+// 创建格式化的 Nginx 日志视图
+.create-or-alter function NginxLogsView() {
+    RawNginxLogs
+    | where Log !startswith "#" and isnotempty(Log)
+    | extend parsed = parse_regex(Log, @"^(\S+) - (\S+) \[([^\]]+)\] ""([^""]*)"" (\d+) (\d+) ""([^""]*)"" ""([^""]*)""( ""[^""]*"")?$")
+    | extend 
+        RemoteAddr = tostring(parsed[0]),
+        RemoteUser = tostring(parsed[1]),
+        TimeLocal = tostring(parsed[2]),
+        Request = tostring(parsed[3]),
+        Status = toint(parsed[4]),
+        BodyBytesSent = toint(parsed[5]),
+        HttpReferer = tostring(parsed[6]),
+        HttpUserAgent = tostring(parsed[7])
+    | project
+        TimeStamp = TimeGenerated,
+        RemoteAddr,
+        Request,
+        Status,
+        BodyBytesSent,
+        HttpReferer,
+        HttpUserAgent,
+        PodName,
+        Namespace,
+        NodeName
+    | where isnotempty(RemoteAddr)
+}
+
+// 使用视图
+NginxLogsView
+| summarize RequestCount = count() by Status
+| render piechart
+
+# 检查 Fluent Bit Pod 状态
+kubectl get pods -n logging
+
+# 查看 Fluent Bit 日志
+kubectl logs -n logging -l k8s-app=fluent-bit-logging --tail 100
+
+# 检查 Fluent Bit 的容器输出
+kubectl exec -it $(kubectl get pod -n logging -l k8s-app=fluent-bit-logging -o jsonpath='{.items[0].metadata.name}') -n logging -- sh -c "cat /fluent-bit/etc/fluent-bit.conf"
+
+# 验证 Workload Identity 配置
+kubectl get serviceaccount fluent-bit -n logging -o yaml
+
+# Restart the Fluent Bit pods
+kubectl rollout restart daemonset fluent-bit -n logging
+
+
+
+
+
+kubectl apply -f - <<EOF
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluent-bit
+  namespace: logging
+  labels:
+    k8s-app: fluent-bit-logging
+spec:
+  selector:
+    matchLabels:
+      k8s-app: fluent-bit-logging
+  template:
+    metadata:
+      labels:
+        k8s-app: fluent-bit-logging
+      annotations:
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: fluent-bit
+      containers:
+      - name: fluent-bit
+        image: fluent/fluent-bit:latest
+        imagePullPolicy: Always
+        env:
+        - name: TENANT_ID
+          value: "${TENANT_ID}"
+        - name: IDENTITY_CLIENT_ID
+          value: "${IDENTITY_CLIENT_ID}"
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+        - name: fluent-bit-config
+          mountPath: /fluent-bit/etc/
+        - name: fluent-bit-state
+          mountPath: /fluent-bit/state
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log
+      - name: varlibdockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
+      - name: fluent-bit-config
+        configMap:
+          name: fluent-bit-config
+      - name: fluent-bit-state
+        emptyDir: {}
+      imagePullSecrets:
+      - name: regcred
+EOF
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 创建服务主体
+SP_JSON=$(az ad sp create-for-rbac \
+  --name "fluent-bit-adx-sp" \
+  --role contributor \
+  --scope /subscriptions/$(az account show --query id -o tsv))
+
+# 提取服务主体信息
+SP_CLIENT_ID=$(echo $SP_JSON | jq -r .appId)
+SP_CLIENT_SECRET=$(echo $SP_JSON | jq -r .password)
+SP_TENANT_ID=$(echo $SP_JSON | jq -r .tenant)
+
+echo "Service Principal Client ID: $SP_CLIENT_ID"
+echo "Service Principal Client Secret: $SP_CLIENT_SECRET"
+echo "Tenant ID: $SP_TENANT_ID"
+
+// 授予服务主体摄取权限
+.add database nginx_logs ingestors ('aadapp=a425d7aa-da3f-4dd4-804d-e6743e2c9bb4') 'Fluent Bit Service Principal'
+
+# 创建包含服务主体凭据的 Secret
+kubectl create secret generic adx-sp-credentials \
+  --namespace logging \
+  --from-literal=tenant-id=$SP_TENANT_ID \
+  --from-literal=client-id=$SP_CLIENT_ID \
+  --from-literal=client-secret=$SP_CLIENT_SECRET
+
+
+# 删除现有的 DaemonSet (如果存在)
+kubectl delete daemonset fluent-bit -n logging
+
+# 更新 Fluent Bit 配置
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config
+  namespace: logging
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Flush             1
+        Log_Level         debug
+        Daemon            off
+        HTTP_Server       On
+        HTTP_Listen       0.0.0.0
+        HTTP_Port         2020
+        storage.path      /fluent-bit/state/flb-storage/
+        storage.sync      normal
+        storage.backlog.mem_limit 5M
+
+    [INPUT]
+        Name              tail
+        Tag               kube.app.*
+        Path              /var/log/containers/*_app_nginx-*.log
+        Parser            docker
+        DB                /fluent-bit/state/flb_kube.db
+        Mem_Buf_Limit     5MB
+        Skip_Long_Lines   On
+        Refresh_Interval  10
+
+    [FILTER]
+        Name                kubernetes
+        Match               kube.app.*
+        Kube_URL            https://kubernetes.default.svc:443
+        Kube_CA_File        /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        Kube_Token_File     /var/run/secrets/kubernetes.io/serviceaccount/token
+        Kube_Tag_Prefix     kube.app.
+        Merge_Log           On
+        Buffer_Size         0
+        
+    [OUTPUT]
+        Name                azure_kusto
+        Match               kube.app.*
+        tenant_id           \${TENANT_ID}
+        client_id           \${CLIENT_ID}
+        client_secret       \${CLIENT_SECRET}
+        ingestion_endpoint  https://ingest-xsadx1.eastus.kusto.windows.net
+        database_name       nginx_logs
+        table_name          RawNginxLogs
+        ingestion_mapping_reference RawNginxLogsMapping
+        log_level           debug
+EOF
+
+# 部署 Fluent Bit DaemonSet
+kubectl apply -f - <<EOF
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluent-bit
+  namespace: logging
+  labels:
+    k8s-app: fluent-bit-logging
+spec:
+  selector:
+    matchLabels:
+      k8s-app: fluent-bit-logging
+  template:
+    metadata:
+      labels:
+        k8s-app: fluent-bit-logging
+    spec:
+      serviceAccountName: fluent-bit
+      containers:
+      - name: fluent-bit
+        image: fluent/fluent-bit:latest
+        imagePullPolicy: Always
+        env:
+        - name: TENANT_ID
+          valueFrom:
+            secretKeyRef:
+              name: adx-sp-credentials
+              key: tenant-id
+        - name: CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: adx-sp-credentials
+              key: client-id
+        - name: CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: adx-sp-credentials
+              key: client-secret
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+        - name: fluent-bit-config
+          mountPath: /fluent-bit/etc/
+        - name: fluent-bit-state
+          mountPath: /fluent-bit/state
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log
+      - name: varlibdockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
+      - name: fluent-bit-config
+        configMap:
+          name: fluent-bit-config
+      - name: fluent-bit-state
+        emptyDir: {}
+EOF
