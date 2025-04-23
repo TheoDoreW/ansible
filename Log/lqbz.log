@@ -1286,3 +1286,45 @@ az network public-ip create --resource-group tprg --name d2v5vm1-basicip --versi
 azureuser
 Microsoft2025
 XinXin15@912
+
+
+az sig show --resource-group debianrg --gallery-name acg1 --query id
+az role assignment create --role "Reader" --assignee xinswang@microsoft.com --scope '/subscriptions/ba10fd82-edf7-4c96-8c6a-2f46085f56f2/resourceGroups/debianrg/providers/Microsoft.Compute/galleries/acg1'
+
+
+imageid="<ID of the image that you want to use>"
+az vm create --resource-group myResourceGroup --name myVM --image $imageid --admin-username azureuser --generate-ssh-keys
+
+non-prod:
+tenant1='16b3c013-d300-468d-ac64-7eda0820b6d3'
+external:
+tenant2='a12a9611-ff59-477f-84ce-106ebec51742'
+
+appid='20e739eb-c774-46d3-8abc-9e9a55b87fda'
+secret=''
+secretid='b5102024-b5bc-4191-a31a-0198e29c8bc7'
+
+
+ https://login.microsoftonline.com/a12a9611-ff59-477f-84ce-106ebec51742/oauth2/authorize?client_id=20e739eb-c774-46d3-8abc-9e9a55b87fda&response_type=code&redirect_uri=https%3A%2F%2Fwww.microsoft.com%2F
+
+az account clear
+az login --tenant $tenant1
+az account get-access-token 
+az login --tenant $tenant2
+az account get-access-token
+
+
+resourceGroup=debianrg
+gallery=acg1
+az sig image-definition list --resource-group $resourceGroup --gallery-name $gallery --query "[].[name, id]" --output tsv
+
+imgDef="/subscriptions/22c02293-b20b-4712-b48d-b974afcb50c0/resourceGroups/debianrg/providers/Microsoft.Compute/galleries/acg1/images/debian12/versions/1.0.0"
+imgDef="/subscriptions/ba10fd82-edf7-4c96-8c6a-2f46085f56f2/resourceGroups/debianrg/providers/Microsoft.Compute/images/debian12-1-image-20250423100125"
+vmResourceGroup=debianrg
+location=westus2
+vmName=debian12-1
+adminUsername=azureuser
+
+az group create --name $vmResourceGroup --location $location
+
+az vm create --resource-group $vmResourceGroup --name $vmName --image $imgDef --admin-username $adminUsername --admin-password 'Microsoft2025'
