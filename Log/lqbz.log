@@ -1328,3 +1328,6 @@ adminUsername=azureuser
 az group create --name $vmResourceGroup --location $location
 
 az vm create --resource-group $vmResourceGroup --name $vmName --image $imgDef --admin-username $adminUsername --admin-password 'Microsoft2025'
+
+
+az aks update --resource-group xsrg --name xsaks1 --tier premium --k8s-support-plan AKSLongTermSupport

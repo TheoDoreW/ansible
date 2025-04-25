@@ -1,0 +1,120 @@
+# 确保已连接到您的 AKS 集群
+az aks get-credentials --resource-group xsrg --name xsaks1
+
+# 查看集群节点状态
+kubectl get nodes
+
+# 创建用于应用和日志管理的命名空间
+kubectl create namespace nginx-app
+kubectl create namespace logging
+
+# 创建 Nginx 配置，使用 JSON 格式输出日志以便于解析
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: nginx-app
+data:
+  nginx.conf: |
+    user nginx;
+    worker_processes auto;
+    
+    error_log /var/log/nginx/error.log notice;
+    pid /var/run/nginx.pid;
+    
+    events {
+      worker_connections 1024;
+    }
+    
+    http {
+      include /etc/nginx/mime.types;
+      default_type application/octet-stream;
+      
+      # 配置 JSON 格式的日志输出
+      log_format json_combined escape=json '{'
+        '"remote_addr": "$remote_addr",'
+        '"remote_user": "$remote_user",'
+        '"time_local": "$time_local",'
+        '"request": "$request",'
+        '"status": $status,'
+        '"body_bytes_sent": $body_bytes_sent,'
+        '"request_time": $request_time,'
+        '"http_referer": "$http_referer",'
+        '"http_user_agent": "$http_user_agent"'
+      '}';
+      
+      # 使用标准输出而不是文件
+      access_log /dev/stdout json_combined;
+      error_log /dev/stderr;
+      
+      sendfile on;
+      keepalive_timeout 65;
+      
+      server {
+        listen 80;
+        server_name localhost;
+        
+        location / {
+          root /usr/share/nginx/html;
+          index index.html index.htm;
+        }
+        
+        location = /health {
+          access_log off;
+          return 200 'ok';
+        }
+      }
+    }
+EOF
+
+# 部署 Nginx
+cat <<EOF | kubectl apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: nginx-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.21.6
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  namespace: nginx-app
+spec:
+  selector:
+    app: nginx
+  ports:
+  - port: 80
+    targetPort: 80
+  type: LoadBalancer
+EOF
