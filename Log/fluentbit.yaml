@@ -76,7 +76,7 @@ metadata:
   name: nginx
   namespace: nginx-app
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app: nginx
@@ -118,3 +118,314 @@ spec:
     targetPort: 80
   type: LoadBalancer
 EOF
+
+
+# 添加 Elastic Helm 仓库
+helm repo add elastic https://helm.elastic.co
+helm repo update
+
+# 部署 Elasticsearch（调整资源请求以适应您的集群）
+cat <<EOF > elasticsearch-values.yaml
+replicas: 3
+minimumMasterNodes: 1
+esJavaOpts: "-Xmx1g -Xms1g"
+resources:
+  requests:
+    cpu: "500m"
+    memory: "1Gi"
+  limits:
+    cpu: "1000m"
+    memory: "2Gi"
+volumeClaimTemplate:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 10Gi
+EOF
+
+helm install elasticsearch elastic/elasticsearch \
+  --namespace logging \
+  --values elasticsearch-values.yaml \
+  --set antiAffinity="soft"
+
+NOTES:
+1. Watch all cluster members come up.
+  $ kubectl get pods --namespace=logging -l app=elasticsearch-master -w
+2. Retrieve elastic user's password.
+  $ kubectl get secrets --namespace=logging elasticsearch-master-credentials -ojsonpath='{.data.password}' | base64 -d
+  2Xb8iCckPYl19wY1%
+3. Test cluster health using Helm test.
+  $ helm --namespace=logging test elasticsearch
+
+
+# 部署 Kibana
+cat <<EOF > kibana-values.yaml
+elasticsearchHosts: "https://elasticsearch-master:9200"
+resources:
+  requests:
+    cpu: "100m"
+    memory: "512Mi"
+  limits:
+    cpu: "500m"
+    memory: "1Gi"
+service:
+  type: LoadBalancer
+EOF
+
+helm install kibana elastic/kibana \
+  --namespace logging \
+  --values kibana-values.yaml
+
+helm upgrade --install kibana elastic/kibana \
+  --namespace logging \
+  --values kibana-values.yaml
+
+helm list -n logging
+helm uninstall -n logging kibana
+
+kubectl -n logging delete cm kibana-kibana-helm-scripts --ignore-not-found
+kubectl -n logging delete role pre-install-kibana-kibana --ignore-not-found
+kubectl -n logging delete rolebinding pre-install-kibana-kibana --ignore-not-found
+kubectl -n logging delete sa pre-install-kibana-kibana --ignore-not-found
+kubectl -n logging delete sa post-delete-kibana-kibana --ignore-not-found
+kubectl -n logging delete job pre-install-kibana-kibana --ignore-not-found
+kubectl -n logging delete job post-delete-kibana-kibana --ignore-not-found
+
+NOTES:
+1. Watch all containers come up.
+  $ kubectl get pods --namespace=logging -l release=kibana -w
+2. Retrieve the elastic user's password.
+  $ kubectl get secrets --namespace=logging elasticsearch-master-credentials -ojsonpath='{.data.password}' | base64 -d && echo
+3. Retrieve the kibana service account token.
+  $ kubectl get secrets --namespace=logging kibana-kibana-es-token -ojsonpath='{.data.token}' | base64 -d
+
+
+# 创建 ServiceAccount 和 RBAC
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: fluent-bit
+  namespace: logging
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: fluent-bit-role
+rules:
+  - apiGroups: [""]
+    resources:
+      - namespaces
+      - pods
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: fluent-bit-role-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: fluent-bit-role
+subjects:
+  - kind: ServiceAccount
+    name: fluent-bit
+    namespace: logging
+EOF
+
+# 创建 Fluent Bit 配置
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config
+  namespace: logging
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Flush        1
+        Log_Level    info
+        Daemon       off
+        HTTP_Server  On
+        HTTP_Listen  0.0.0.0
+        HTTP_Port    2020
+
+    @INCLUDE input-kubernetes.conf
+    @INCLUDE filter-kubernetes.conf
+    @INCLUDE output-elasticsearch.conf
+
+  input-kubernetes.conf: |
+    [INPUT]
+        Name              tail
+        Tag               kube.*
+        Path              /var/log/containers/*_nginx-app_nginx-*.log
+        Parser            docker
+        DB                /var/log/fluent-bit-state/flb_kube.db
+        Mem_Buf_Limit     5MB
+        Skip_Long_Lines   On
+        Refresh_Interval  10
+
+  filter-kubernetes.conf: |
+    [FILTER]
+        Name                kubernetes
+        Match               kube.*
+        Kube_URL            https://kubernetes.default.svc:443
+        Kube_CA_File        /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        Kube_Token_File     /var/run/secrets/kubernetes.io/serviceaccount/token
+        Kube_Tag_Prefix     kube.var.log.containers.
+        Merge_Log           On
+        Merge_Log_Key       log_processed
+        K8S-Logging.Parser  On
+        K8S-Logging.Exclude Off
+
+  output-elasticsearch.conf: |
+    [OUTPUT]
+        Name            es
+        Match           kube.*
+        Host            elasticsearch-master
+        Port            9200
+        Index           nginx-logs
+        Type            nginx_access
+        Generate_ID     On
+        Logstash_Format On
+        Logstash_Prefix nginx
+        Time_Key        @timestamp
+        Replace_Dots    On
+        Retry_Limit     5
+        tls             Off
+
+  parsers.conf: |
+    [PARSER]
+        Name        docker
+        Format      json
+        Time_Key    time
+        Time_Format %Y-%m-%dT%H:%M:%S.%L
+        Time_Keep   On
+EOF
+
+# 部署 Fluent Bit DaemonSet
+cat <<EOF | kubectl apply -f -
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluent-bit
+  namespace: logging
+  labels:
+    app.kubernetes.io/name: fluent-bit
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: fluent-bit
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: fluent-bit
+    spec:
+      serviceAccountName: fluent-bit
+      containers:
+      - name: fluent-bit
+        image: fluent/fluent-bit:latest
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+        - name: fluent-bit-config
+          mountPath: /fluent-bit/etc/
+        - name: fluent-bit-state
+          mountPath: /var/log/fluent-bit-state
+        ports:
+        - name: http
+          containerPort: 2020
+        resources:
+          limits:
+            memory: 500Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+        securityContext:
+          runAsUser: 0
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log
+      - name: varlibdockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
+      - name: fluent-bit-config
+        configMap:
+          name: fluent-bit-config
+      - name: fluent-bit-state
+        hostPath:
+          path: /var/log/fluent-bit-state
+          type: DirectoryOrCreate
+EOF
+
+
+7. 生成测试流量
+# 获取 Nginx 服务的外部 IP
+NGINX_IP=$(kubectl get svc nginx -n nginx-app -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+# 生成一些测试流量
+for i in {1..50}; do
+  curl -s "http://$NGINX_IP/"
+  curl -s "http://$NGINX_IP/nonexistent-page"
+  echo "Generated request batch $i"
+  sleep 2
+done
+
+
+8. 在 Kibana 中配置和查看日志
+获取 Kibana 服务地址：
+kubectl get svc kibana-kibana -n logging
+在浏览器中打开 Kibana 地址（使用 LoadBalancer 的 IP 和端口 5601），然后执行以下步骤：
+
+导航到 Stack Management > Index Patterns
+创建新的索引模式，使用 nginx-* 作为模式
+选择 @timestamp 作为时间字段
+导航到 Discover 查看收集的日志
+9. 创建 Kibana 仪表板
+在 Kibana 中创建以下可视化：
+
+HTTP 状态码分布
+
+类型：饼图
+指标：Count
+分组依据：status
+请求时间分布
+
+类型：柱状图
+指标：Average request_time
+分组依据：时间间隔（每分钟）
+热门请求路径
+
+类型：数据表
+指标：Count
+分组依据：request
+
+
+10. 查看 Fluent Bit 日志收集状态
+# 检查 Fluent Bit 是否正常运行
+kubectl get pods -n logging -l app.kubernetes.io/name=fluent-bit
+
+# 检查 Fluent Bit 日志
+kubectl logs -n logging -l app.kubernetes.io/name=fluent-bit --tail=50
+
+# 验证 Elasticsearch 是否收到日志
+kubectl port-forward svc/elasticsearch-master -n logging 9200:9200
+
+
+在另一个终端中：
+curl -X GET "localhost:9200/nginx-*/_search?pretty" -H 'Content-Type: application/json' -d'
+{
+  "size": 10,
+  "sort": [
+    {
+      "@timestamp": {
+        "order": "desc"
+      }
+    }
+  ]
+}
+'

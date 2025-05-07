@@ -1331,3 +1331,6 @@ az vm create --resource-group $vmResourceGroup --name $vmName --image $imgDef --
 
 
 az aks update --resource-group xsrg --name xsaks1 --tier premium --k8s-support-plan AKSLongTermSupport
+
+
+生成一段英文介绍，大致内容如下：首先在讲解跨境互联的网络方案之前，先明确一点，微软云 21v和global 是两朵云，而且这两朵云之间没有任何的网络链路连接。坦白说，以前关于跨境的网络互联的方案，一般有三种形式，ExpressRoute/sdwan/mpls. 这三种方式各有优缺点，下面我们来逐一分析一下。首先是ExpressRoute, 这个方案是微软云提供的专线服务，具有高带宽、低延迟和高安全性等优点，但是价格相对较高，并且需要在本地和云端都进行设备采购和配置。其次是sdwan, 这个方案是通过软件定义的广域网技术实现的，具有灵活性和可扩展性等优点，但是需要在本地和云端都进行设备采购和配置。最后是mpls, 这个方案是通过多协议标签交换技术实现的，具有高带宽、低延迟和高安全性等优点，但是价格相对较高，并且需要在本地和云端都进行设备采购和配置。总的来说，这三种方案各有优缺点，具体选择哪种方案还要根据实际情况来定。
