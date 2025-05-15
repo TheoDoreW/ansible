@@ -1331,5 +1331,3 @@ az vm create --resource-group $vmResourceGroup --name $vmName --image $imgDef --
 
 
 az aks update --resource-group xsrg --name xsaks1 --tier premium --k8s-support-plan AKSLongTermSupport
-
-
