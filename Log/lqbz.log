@@ -1331,3 +1331,37 @@ az vm create --resource-group $vmResourceGroup --name $vmName --image $imgDef --
 
 
 az aks update --resource-group xsrg --name xsaks1 --tier premium --k8s-support-plan AKSLongTermSupport
+
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: myResourceGroup
+    service.beta.kubernetes.io/azure-load-balancer-name: myloadbalancer
+
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: MC_xsrg_xsaks1_eastus
+    service.beta.kubernetes.io/azure-load-balancer-name: kubernetes
+    service.beta.kubernetes.io/azure-load-balancer-ipv4: 172.206.199.112
+spec:
+  type: LoadBalancer
+  selector:
+    app: my-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+
+
+az aks loadbalancer add -g xsrg -n secondary --cluster-name xsaks1 --primary-agent-pool-name userpool
+
+
