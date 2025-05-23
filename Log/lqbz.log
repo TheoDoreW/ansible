@@ -1414,5 +1414,3 @@ xinsheng.wang@MacBook Pro ~ % kubectl -n nginx-app get pod nginx-54b4b89ff-gz8r7
 
 
 
-昨天说的俩问题调研了一下，简单说一下调研结果：
-1、AKS 模拟节点故障，soft的方式可以通过kubectl drain或者az aks nodepool scale 这
