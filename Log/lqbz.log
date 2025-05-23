@@ -1365,6 +1365,8 @@ spec:
 az aks loadbalancer add -g xsrg -n secondary --cluster-name xsaks1 --primary-agent-pool-name userpool
 
 
+
+
 glb afd aks
 
 
@@ -1374,6 +1376,18 @@ pod 重新调度；
 
 az vmss list-instances --resource-group MC_xsrg_xsaks1_eastus --name aks-userpool-11717956-vmss --output table
 az vmss stop --resource-group MC_xsrg_xsaks1_eastus --name aks-userpool-11717956-vmss --instance-ids 40
+
+
+az vmss start --no-wait \
+  --resource-group MC_xsrg_xsaks1_eastus \
+  --name aks-userpool-11717956-vmss \
+  --instance-ids $(az vmss list-instances \
+    --name aks-userpool-11717956-vmss \
+    --resource-group MC_xsrg_xsaks1_eastus \
+    --query "[0].instanceId" \
+    -o tsv
+  )
+
 
 xinsheng.wang@MacBook Pro ~ % kubectl get nodes -l agentpool=userpool                                                    
 NAME                               STATUS     ROLES    AGE   VERSION
@@ -1398,3 +1412,7 @@ xinsheng.wang@MacBook Pro ~ % kubectl -n nginx-app get pod nginx-54b4b89ff-gz8r7
   }
 ]
 
+
+
+昨天说的俩问题调研了一下，简单说一下调研结果：
+1、AKS 模拟节点故障，soft的方式可以通过kubectl drain或者az aks nodepool scale 这
