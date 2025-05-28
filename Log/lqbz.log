@@ -1414,3 +1414,53 @@ xinsheng.wang@MacBook Pro ~ % kubectl -n nginx-app get pod nginx-54b4b89ff-gz8r7
 
 
 
+/subscriptions/ba10fd82-edf7-4c96-8c6a-2f46085f56f2/resourcegroups/xsrg/providers/Microsoft.ContainerService/managedClusters/xsaks1
+
+
+az aks update --name xsaks1 --resource-group xsrg --node-provisioning-mode Auto --network-plugin azure --network-plugin-mode overlay --network-dataplane cilium
+
+cat <<EOF | kubectl apply -f -
+---
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: default
+spec:
+  disruption:
+    consolidationPolicy: WhenEmptyOrUnderutilized
+  template:
+    spec:
+      expireAfter: Never
+      nodeClassRef:
+        name: default
+      requirements:
+      - key: kubernetes.io/arch
+        operator: In
+        values:
+        - amd64
+      - key: kubernetes.io/os
+        operator: In
+        values:
+        - linux
+      - key: karpenter.sh/capacity-type
+        operator: In
+        values:
+        - on-demand
+      - key: karpenter.azure.com/sku-family
+        operator: In
+        values:
+        - D
+EOF
+
+
+kubectl get nodes -o yaml | grep -A 5 "karpenter"
+
+# 应用 NodePool 和 NodeClass 配置
+kubectl apply -f existing-cluster-nodepool.yaml
+kubectl apply -f existing-cluster-nodeclass.yaml
+
+# 验证资源创建
+kubectl get nodepool
+kubectl get aksnodeclass
+kubectl describe nodepool general-purpose
+
