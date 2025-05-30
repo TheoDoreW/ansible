@@ -1365,6 +1365,6 @@ spec:
 az aks loadbalancer add -g xsrg -n secondary --cluster-name xsaks1 --primary-agent-pool-name userpool
 
 
-
+az aks update --name $CLUSTER_NAME --resource-group $RESOURCE_GROUP_NAME --node-provisioning-mode Manual
 
 
