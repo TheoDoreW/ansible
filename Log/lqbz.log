@@ -1367,4 +1367,333 @@ az aks loadbalancer add -g xsrg -n secondary --cluster-name xsaks1 --primary-age
 
 az aks update --name $CLUSTER_NAME --resource-group $RESOURCE_GROUP_NAME --node-provisioning-mode Manual
 
+az aks get-credentials --resource-group xsrg --name xsaks1
+
+
+RG="xsrg"
+PRIMARY_LOCATION="eastus"
+DR_LOCATION="westus"
+PRIMARY_STORAGE="xsaks1storage1749185072"
+DR_STORAGE="xsdraks1storage174918507"
+FILE_SHARE_NAME="aksdata"
+PRIMARY_CLUSTER="xsaks1"
+DR_CLUSTER="xsdraks1"
+
+
+kubectl exec -it file-test-app-758c6f5ff6-6vkgm -- /bin/bash
+
+
+kubectl create job --from=cronjob/file-sync-cronjob manual-sync-test-fix2
+kubectl logs -f job/manual-sync-test-fix2
+
+
+cat <<EOF | kubectl apply -f -
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: file-sync-cronjob
+spec:
+  schedule: "*/5 * * * *"  # 每5分钟执行一次
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: azcopy-sync
+            image: mcr.microsoft.com/azure-cli:latest
+            command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              
+              # 检查并安装 wget
+              echo "[$(date '+%Y-%m-%d %H:%M:%S')] Installing dependencies..."
+              if command -v apt-get &> /dev/null; then
+                  # Debian/Ubuntu 系统
+                  apt-get update && apt-get install -y wget
+              elif command -v apk &> /dev/null; then
+                  # Alpine 系统
+                  apk add --no-cache wget
+              elif command -v yum &> /dev/null; then
+                  # CentOS/RHEL 系统
+                  yum install -y wget
+              else
+                  echo "无法确定包管理器类型"
+                  exit 1
+              fi
+              
+              # 安装 AzCopy
+              echo "[$(date '+%Y-%m-%d %H:%M:%S')] Installing AzCopy..."
+              wget -q -O azcopy.tar.gz https://aka.ms/downloadazcopy-v10-linux
+              tar -xf azcopy.tar.gz --strip-components=1
+              chmod +x azcopy
+              mv azcopy /usr/local/bin/
+              
+              # 验证 AzCopy 安装
+              echo "[$(date '+%Y-%m-%d %H:%M:%S')] AzCopy version:"
+              /usr/local/bin/azcopy --version
+              
+              # 设置环境变量
+              export PATH=/usr/local/bin:$PATH
+              
+              # 生成 SAS 令牌 (24小时有效期)
+              echo "[$(date '+%Y-%m-%d %H:%M:%S')] Generating SAS tokens..."
+              END_TIME=$(date -u -d "24 hours" '+%Y-%m-%dT%H:%M:%SZ')
+              
+              PRIMARY_SAS=$(az storage account generate-sas \
+                --account-name $PRIMARY_STORAGE \
+                --account-key "$PRIMARY_KEY" \
+                --expiry $END_TIME \
+                --permissions rl \
+                --resource-types sco \
+                --services f \
+                -o tsv)
+              
+              DR_SAS=$(az storage account generate-sas \
+                --account-name $DR_STORAGE \
+                --account-key "$DR_KEY" \
+                --expiry $END_TIME \
+                --permissions rwdl \
+                --resource-types sco \
+                --services f \
+                -o tsv)
+              
+              # 执行同步
+              echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting sync from $PRIMARY_STORAGE to $DR_STORAGE"
+              SYNC_START=$(date +%s)
+              
+              azcopy sync \
+                "https://$PRIMARY_STORAGE.file.core.windows.net/$FILE_SHARE?$PRIMARY_SAS" \
+                "https://$DR_STORAGE.file.core.windows.net/$FILE_SHARE?$DR_SAS" \
+                --recursive \
+                --delete-destination=true \
+                --compare-hash=MD5 \
+                --cap-mbps=0 \
+                --log-level=INFO
+              
+              SYNC_END=$(date +%s)
+              SYNC_DURATION=$((SYNC_END - SYNC_START))
+              
+              echo "[$(date '+%Y-%m-%d %H:%M:%S')] Sync completed in $SYNC_DURATION seconds"
+              
+              # 输出同步统计
+              echo "=== Sync Statistics ==="
+              azcopy jobs show --with-status=completed --output-type=json | tail -1 || true
+            env:
+            - name: PRIMARY_STORAGE
+              valueFrom:
+                secretKeyRef:
+                  name: sync-credentials
+                  key: primary-storage
+            - name: PRIMARY_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: sync-credentials
+                  key: primary-key
+            - name: DR_STORAGE
+              valueFrom:
+                secretKeyRef:
+                  name: sync-credentials
+                  key: dr-storage
+            - name: DR_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: sync-credentials
+                  key: dr-key
+            - name: FILE_SHARE
+              valueFrom:
+                secretKeyRef:
+                  name: sync-credentials
+                  key: file-share
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "100m"
+              limits:
+                memory: "512Mi"
+                cpu: "500m"
+          restartPolicy: OnFailure
+EOF
+
+
+
+# 手动触发测试
+kubectl delete job manual-sync-test
+kubectl create job --from=cronjob/file-sync-cronjob manual-sync-test
+
+kubectl logs -f job/manual-sync-test
+
+
+
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: file-sync-cronjob
+spec:
+  schedule: "*/5 * * * *"  # 每5分钟执行一次
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: azcopy-sync
+            image: ubuntu:22.04
+            command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              
+              # 安装 AzCopy
+              echo "[$(date '+%Y-%m-%d %H:%M:%S')] Installing dependencies..."
+              apt-get update && apt-get install -y wget
+              echo "[$(date '+%Y-%m-%d %H:%M:%S')] Installing AzCopy..."
+              wget -O azcopy_v10.tar.gz https://aka.ms/downloadazcopy-v10-linux && \
+              tar -xf azcopy_v10.tar.gz --strip-components=1 && \
+              chmod +x azcopy && \
+              mv azcopy /usr/local/bin/
+              
+              # 验证 AzCopy 安装
+              echo "[$(date '+%Y-%m-%d %H:%M:%S')] AzCopy version:"
+              /usr/local/bin/azcopy --version
+              
+              # 使用 Azure CLI 生成 SAS URL
+              echo "[$(date '+%Y-%m-%d %H:%M:%S')] Generating SAS URLs..."
+              
+              PRIMARY_SAS_URL=$(az storage share url \
+                --account-name $PRIMARY_STORAGE \
+                --account-key "$PRIMARY_KEY" \
+                --name $FILE_SHARE \
+                --sas-token $(az storage account generate-sas \
+                  --account-name $PRIMARY_STORAGE \
+                  --account-key "$PRIMARY_KEY" \
+                  --expiry $(date -u -d "24 hours" '+%Y-%m-%dT%H:%M:%SZ') \
+                  --permissions rl \
+                  --resource-types sco \
+                  --services f \
+                  -o tsv) \
+                -o tsv)
+              
+              DR_SAS_URL=$(az storage share url \
+                --account-name $DR_STORAGE \
+                --account-key "$DR_KEY" \
+                --name $FILE_SHARE \
+                --sas-token $(az storage account generate-sas \
+                  --account-name $DR_STORAGE \
+                  --account-key "$DR_KEY" \
+                  --expiry $(date -u -d "24 hours" '+%Y-%m-%dT%H:%M:%SZ') \
+                  --permissions rwdlacup \
+                  --resource-types sco \
+                  --services f \
+                  -o tsv) \
+                -o tsv)
+              
+              # 执行同步
+              echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting sync from $PRIMARY_STORAGE to $DR_STORAGE"
+              SYNC_START=$(date +%s)
+              
+              azcopy sync \
+                "$PRIMARY_SAS_URL" \
+                "$DR_SAS_URL" \
+                --recursive \
+                --delete-destination=true \
+                --compare-hash=MD5 \
+                --cap-mbps=0 \
+                --log-level=INFO
+              
+              SYNC_END=$(date +%s)
+              SYNC_DURATION=$((SYNC_END - SYNC_START))
+              
+              echo "[$(date '+%Y-%m-%d %H:%M:%S')] Sync completed in $SYNC_DURATION seconds"
+            env:
+            - name: PRIMARY_STORAGE
+              valueFrom:
+                secretKeyRef:
+                  name: sync-credentials
+                  key: primary-storage
+            - name: PRIMARY_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: sync-credentials
+                  key: primary-key
+            - name: DR_STORAGE
+              valueFrom:
+                secretKeyRef:
+                  name: sync-credentials
+                  key: dr-storage
+            - name: DR_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: sync-credentials
+                  key: dr-key
+            - name: FILE_SHARE
+              valueFrom:
+                secretKeyRef:
+                  name: sync-credentials
+                  key: file-share
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "100m"
+              limits:
+                memory: "512Mi"
+                cpu: "500m"
+          restartPolicy: OnFailure
+
+
+
+
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dr-file-verify-pod
+spec:
+  containers:
+  - name: verify
+    image: ubuntu:22.04
+    command:
+    - /bin/bash
+    - -c
+    - |
+      apt-get update && apt-get install -y curl
+      
+      echo "=== DR File Share Verification ==="
+      echo "Time: $(date '+%Y-%m-%d %H:%M:%S')"
+      echo "Mount point: /mnt/fileshare"
+      
+      while true; do
+        echo ""
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] File statistics:"
+        echo "Total files: $(find /mnt/fileshare -type f 2>/dev/null | wc -l)"
+        echo "Total size: $(du -sh /mnt/fileshare 2>/dev/null | cut -f1)"
+        
+        echo ""
+        echo "Latest 10 files:"
+        find /mnt/fileshare -type f -printf '%T@ %p\n' 2>/dev/null | sort -n -r | head -10 | cut -d' ' -f2-
+        
+        echo ""
+        echo "Sample file content:"
+        if [ -f "/mnt/fileshare/test-1.txt" ]; then
+          echo "test-1.txt: $(cat /mnt/fileshare/test-1.txt)"
+        fi
+        
+        sleep 300  # 每5分钟检查一次
+      done
+    volumeMounts:
+    - name: file-share
+      mountPath: /mnt/fileshare
+  volumes:
+  - name: file-share
+    persistentVolumeClaim:
+      claimName: azurefile-pv-dr
+
 
