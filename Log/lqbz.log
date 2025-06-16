@@ -1797,3 +1797,6 @@ spec:
 msadmin
 Microsoft2025
 
+
+az network cross-region-lb create --name myLoadBalancer-CR --resource-group xsrg --frontend-ip-name fe1 --backend-pool-name myBackEndPool-CR
+
