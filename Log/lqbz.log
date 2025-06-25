@@ -1802,3 +1802,35 @@ az network cross-region-lb create --name myLoadBalancer-CR --resource-group xsrg
 
 
 az vm list-usage --location japaneast --output table
+
+
+az network nsg rule create \
+  -g $NODE_RG \
+  --nsg-name $NSG_NAME \
+  -n "DenyAllInbound-$NODE_NAME" \
+  --priority 100 \
+  --source-address-prefixes '*' \
+  --destination-address-prefixes $NODE_IP \
+  --destination-port-ranges '*' \
+  --direction Inbound \
+  --access Deny \
+  --protocol '*' \
+  --description "Block all inbound traffic to node $NODE_NAME"
+
+
+10.11.1.75,10.11.0.222,10.11.0.113
+kubectl debug node/aks-testpool-59824326-vmss000000 -it --image=mcr.microsoft.com/cbl-mariner/busybox:2.0
+
+
+-A KUBE-SEP-KOZTVDHXLFXLMMXJ -s 10.11.1.118/32 -m comment --comment "default/test-app-svc" -j KUBE-MARK-MASQ -A KUBE-SEP-KOZTVDHXLFXLMMXJ -p tcp -m comment --comment "default/test-app-svc" -m tcp -j DNAT --to-destination 10.11.1.118:80 -A KUBE-SVC-UIL2NSWCN4L3ZZXI -m comment --comment "default/test-app-svc -> 10.11.1.118:80" -j KUBE-SEP-KOZTVDHXLFXLMMXJ
+
+
+test-app-svc   LoadBalancer   10.254.24.129   52.234.246.220   80:30690/TCP   7h48m   app=test-app
+
+xinsheng.wang@MacBook Pro nsg-policy % kubectl -owide get pods
+NAME                                         READY   STATUS    RESTARTS   AGE     IP            NODE                               NOMINATED NODE   READINESS GATES
+aks-testpool-41648467-vmss000001-exec-7550   1/1     Running   0          112s    10.11.0.238   aks-testpool-41648467-vmss000001   <none>           <none>
+test-app-6d57576869-jwgsj                    1/1     Running   0          4h49m   10.11.1.122   aks-testpool-41648467-vmss000001   <none>           <none>
+
+
+10.11.0.222
