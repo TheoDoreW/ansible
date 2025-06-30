@@ -1833,4 +1833,42 @@ aks-testpool-41648467-vmss000001-exec-7550   1/1     Running   0          112s  
 test-app-6d57576869-jwgsj                    1/1     Running   0          4h49m   10.11.1.122   aks-testpool-41648467-vmss000001   <none>           <none>
 
 
-10.11.0.222
+kubectl debug node/aks-testpool-41648467-vmss000006 -it --image=mcr.microsoft.com/cbl-mariner/busybox:2.0
+
+
+az aks update --name xsaks1 --resource-group xsrg --ssh-key-value ssh-rsa 'AAAAB3NzaC1yc2EAAAADAQABAAABAQCwUEvg5jYspue1gkdnT+qfHh50MPXFbaKEfgVACMjPZeQDkav4El7WAMQCppyBH5fkc1wvc7I064/VPXcW6khHymvOrBHOio2/IeNqGmJv3E/FUHgSxKDLQKLzkev+q7f3qhzE1DC9FVvikcVnCYAPeHs7F0NtmgHhV83TRL3Pm1NWV2pl++x4p7+Aue4clLlkCxg8CWhX7nlMBm2FgWSmilnw1sOpFFeQhvZ/Zqe1qF7jOkx+2lfmZL7ODxIzeC/VrATH4edrd0W3P1VAkj5TgnPdF1ad70MM8hzDKjgebenpoaK0E11aitzWuuX0yspBLOjHG4yWcSQjp56Onh2/ centos@azure-cn'
+az aks update --name xsaks1 --resource-group xsrg --ssh-key-value sshkey/id_rsa.pub
+
+az aks upgrade \
+    --resource-group xsrg \
+    --name xsaks1 \
+    --node-image-only \
+    --yes
+az aks nodepool upgrade --resource-group xsrg --cluster-name xsaks1 --name testpool --node-image-only
+az aks nodepool update --resource-group xsrg --cluster-name xsaks1 --name testpool  --no-wait
+
+az network bastion ssh --name "xsvnet1b1" --resource-group "xsrg" --target-resource-id "/subscriptions/ba10fd82-edf7-4c96-8c6a-2f46085f56f2/resourceGroups/MC_xsrg_xsaks1_eastus/providers/Microsoft.Compute/virtualMachineScaleSets/aks-testpool-41648467-vmss/virtualMachines/6" --auth-type "ssh-key" --username "azureuser" --ssh-key "sshkey/id_rsa.pem"
+
+az network bastion ssh --name "xsvnet1b1" --resource-group "xsrg" --target-ip-address "10.11.0.69" --auth-type "ssh-key" --username "azureuser" --ssh-key "sshkey/id_rsa.pem"
+
+az network bastion tunnel --name "xsvnet1b1" --resource-group "xsrg" --target-resource-id "/subscriptions/ba10fd82-edf7-4c96-8c6a-2f46085f56f2/resourceGroups/MC_xsrg_xsaks1_eastus/providers/Microsoft.Compute/virtualMachineScaleSets/aks-testpool-41648467-vmss/virtualMachines/6" --resource-port "22" --port "2222"
+ssh azureuser@127.0.0.1 -p 2222
+
+az vmss show --resource-group MC_xsrg_xsaks1_eastus --name aks-testpool-41648467-vmss --query "virtualMachineProfile.osProfile.adminUsername"
+
+
+
+
+kubectl get pods -n kube-system -l component=kube-proxy
+
+
+az aks create \
+  --resource-group akstestrg \
+  --name testaks1 \
+  --node-count 1 \
+  --enable-addons monitoring \
+  --node-vm-size standard_d4as_v5 \
+  --os-sku AzureLinux
+
+
+
