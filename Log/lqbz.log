@@ -1801,68 +1801,32 @@ Microsoft2025
 az network cross-region-lb create --name myLoadBalancer-CR --resource-group xsrg --frontend-ip-name fe1 --backend-pool-name myBackEndPool-CR
 
 
-az vm list-usage --location japaneast --output table
+
+az aks nodepool show \
+  --resource-group xsrg \
+  --cluster-name xsaks1 \
+  --name userpool
+
+watch -n 1 "kubectl get nodes -l agentpool=testpool -o wide"
+watch -n 1 "kubectl get pods -l app=upgrade-test -o wide --sort-by='.spec.nodeName'"
 
 
-az network nsg rule create \
-  -g $NODE_RG \
-  --nsg-name $NSG_NAME \
-  -n "DenyAllInbound-$NODE_NAME" \
-  --priority 100 \
-  --source-address-prefixes '*' \
-  --destination-address-prefixes $NODE_IP \
-  --destination-port-ranges '*' \
-  --direction Inbound \
-  --access Deny \
-  --protocol '*' \
-  --description "Block all inbound traffic to node $NODE_NAME"
-
-
-10.11.1.75,10.11.0.222,10.11.0.113
-kubectl debug node/aks-testpool-59824326-vmss000000 -it --image=mcr.microsoft.com/cbl-mariner/busybox:2.0
-
-
--A KUBE-SEP-KOZTVDHXLFXLMMXJ -s 10.11.1.118/32 -m comment --comment "default/test-app-svc" -j KUBE-MARK-MASQ -A KUBE-SEP-KOZTVDHXLFXLMMXJ -p tcp -m comment --comment "default/test-app-svc" -m tcp -j DNAT --to-destination 10.11.1.118:80 -A KUBE-SVC-UIL2NSWCN4L3ZZXI -m comment --comment "default/test-app-svc -> 10.11.1.118:80" -j KUBE-SEP-KOZTVDHXLFXLMMXJ
-
-
-test-app-svc   LoadBalancer   10.254.24.129   52.234.246.220   80:30690/TCP   7h48m   app=test-app
-
-xinsheng.wang@MacBook Pro nsg-policy % kubectl -owide get pods
-NAME                                         READY   STATUS    RESTARTS   AGE     IP            NODE                               NOMINATED NODE   READINESS GATES
-aks-testpool-41648467-vmss000001-exec-7550   1/1     Running   0          112s    10.11.0.238   aks-testpool-41648467-vmss000001   <none>           <none>
-test-app-6d57576869-jwgsj                    1/1     Running   0          4h49m   10.11.1.122   aks-testpool-41648467-vmss000001   <none>           <none>
-
-
-kubectl debug node/aks-testpool-41648467-vmss000006 -it --image=mcr.microsoft.com/cbl-mariner/busybox:2.0
-
-
-az aks update --name xsaks1 --resource-group xsrg --ssh-key-value ssh-rsa ''
-az aks update --name xsaks1 --resource-group xsrg --ssh-key-value sshkey/id_rsa.pub
-
-az aks upgrade \
-    --resource-group xsrg \
-    --name xsaks1 \
-    --node-image-only \
-    --yes
-az aks nodepool upgrade --resource-group xsrg --cluster-name xsaks1 --name testpool --node-image-only
-az aks nodepool update --resource-group xsrg --cluster-name xsaks1 --name testpool  --no-wait
-
-az network bastion ssh --name "xsvnet1b1" --resource-group "xsrg" --target-resource-id "/subscriptions//resourceGroups/MC_xsrg_xsaks1_eastus/providers/Microsoft.Compute/virtualMachineScaleSets/aks-testpool-41648467-vmss/virtualMachines/6" --auth-type "ssh-key" --username "azureuser" --ssh-key "sshkey/id_rsa.pem"
-
-az network bastion ssh --name "xsvnet1b1" --resource-group "xsrg" --target-ip-address "10.11.0.69" --auth-type "ssh-key" --username "azureuser" --ssh-key "sshkey/id_rsa.pem"
-
-az network bastion tunnel --name "xsvnet1b1" --resource-group "xsrg" --target-resource-id "/subscriptions//resourceGroups/MC_xsrg_xsaks1_eastus/providers/Microsoft.Compute/virtualMachineScaleSets/aks-testpool-41648467-vmss/virtualMachines/6" --resource-port "22" --port "2222"
-ssh azureuser@127.0.0.1 -p 2222
-
-az vmss show --resource-group MC_xsrg_xsaks1_eastus --name aks-testpool-41648467-vmss --query "virtualMachineProfile.osProfile.adminUsername"
+watch -n 1 'echo -e "\033[1;34m=== NODES (agentpool=testpool) ===\033[0m" & kubectl get nodes -l agentpool=testpool -o wide & echo -e "\n\033[1;34m=== PODS (app=upgrade-test) ===\033[0m" & kubectl get pods -l app=upgrade-test -o wide --sort-by=".spec.nodeName" & wait'
 
 
 
+az aks show --resource-group xsrg --name xsaks1 --query "provisioningState"
 
-kubectl get pods -n kube-system -l component=kube-proxy
+az aks nodepool get-upgrades --nodepool-name testpool --cluster-name xsaks1 --resource-group xsrg
+
+az aks nodepool show --resource-group xsrg --cluster-name xsaks1 --name testpool --query nodeImageVersion
 
 
+az aks nodepool show \
+  --resource-group xsrg \
+  --cluster-name xsak1 \
+  --name testpool \
+  --query "osSKU"
 
-
-
-
+az group create --name "azurelocalbox"  --location "japaneast"
+az deployment group create -g "azurelocalbox" -f "main.bicep" -p "main.bicepparam"
