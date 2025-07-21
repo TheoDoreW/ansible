@@ -1854,6 +1854,8 @@ az network bastion ssh --name "xsvnet1b1" --resource-group "xsrg" --target-ip-ad
 az network bastion tunnel --name "xsvnet1b1" --resource-group "xsrg" --target-resource-id "/subscriptions//resourceGroups/MC_xsrg_xsaks1_eastus/providers/Microsoft.Compute/virtualMachineScaleSets/aks-testpool-41648467-vmss/virtualMachines/6" --resource-port "22" --port "2222"
 ssh azureuser@127.0.0.1 -p 2222
 
+<<<<<<< HEAD
+=======
 az vmss show --resource-group MC_xsrg_xsaks1_eastus --name aks-testpool-41648467-vmss --query "virtualMachineProfile.osProfile.adminUsername"
 
 
@@ -1914,7 +1916,3 @@ pip3 install pandas==1.3.5
 
 pip3 uninstall wxpy itchat -y
 pip3 install -r requirements.txt
-
-
-
-
