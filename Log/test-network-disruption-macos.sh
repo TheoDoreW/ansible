@@ -54,7 +54,7 @@ LOG_FILE="network-disruption-test-$(date +%Y%m%d-%H%M%S).log"
 log() {
     local message="$1"
     local color="${2:-$NC}"
-    echo -e "${color}[$(date '+%Y-%m-%d %H:%M:%S.%3N')] ${message}${NC}" | tee -a $LOG_FILE
+    echo -e "${color}[$(date '+%Y-%m-%d %H:%M:%S')] ${message}${NC}" | tee -a $LOG_FILE
 }
 
 # 自动选择节点
@@ -100,7 +100,7 @@ log "\n开始后台监控进程..." $CYAN
 (
     while true; do
         NODE_STATUS=$(kubectl get node $TARGET_NODE -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null)
-        TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S.%3N')
+        TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
         echo "$TIMESTAMP,NODE,$NODE_STATUS" >> node-status.csv
         sleep 1
     done
@@ -112,7 +112,7 @@ NODE_MONITOR_PID=$!
     while true; do
         POD_STATUS=$(kubectl get pod $TARGET_POD -n $NAMESPACE -o jsonpath='{.status.phase}' 2>/dev/null)
         POD_READY=$(kubectl get pod $TARGET_POD -n $NAMESPACE -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null)
-        TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S.%3N')
+        TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
         echo "$TIMESTAMP,POD,$POD_STATUS,$POD_READY" >> pod-status.csv
         sleep 1
     done
@@ -122,7 +122,7 @@ POD_MONITOR_PID=$!
 # 3. 监控Service可达性（每0.5秒检查）
 (
     while true; do
-        TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S.%3N')
+        TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
         if curl -s -o /dev/null -w "%{http_code}" --connect-timeout 1 --max-time 1 http://$SVC_IP 2>/dev/null | grep -q "200"; then
             echo "$TIMESTAMP,SERVICE,UP" >> service-status.csv
         else
@@ -136,7 +136,7 @@ SERVICE_MONITOR_PID=$!
 # 4. 监控Pod IP直连（每0.5秒检查）
 (
     while true; do
-        TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S.%3N')
+        TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
         if curl -s -o /dev/null -w "%{http_code}" --connect-timeout 1 --max-time 1 http://$POD_IP 2>/dev/null | grep -q "200"; then
             echo "$TIMESTAMP,POD_DIRECT,UP" >> pod-direct-status.csv
         else
@@ -157,7 +157,7 @@ echo ""
 read -p "网络接口禁用后按回车继续..."
 
 # 记录网络中断时间
-DISRUPTION_TIME=$(date '+%Y-%m-%d %H:%M:%S.%3N')
+DISRUPTION_TIME=$(date '+%Y-%m-%d %H:%M:%S')
 log "网络接口已禁用: $DISRUPTION_TIME" $RED
 
 # 继续监控60秒
@@ -175,11 +175,6 @@ log "\n节点状态变化:"
 FIRST_NOT_READY=$(grep ",NODE,False" node-status.csv | head -1 | cut -d',' -f1)
 if [ -n "$FIRST_NOT_READY" ]; then
     log "节点首次变为 NotReady: $FIRST_NOT_READY" $RED
-    # 计算时间差
-    DISRUPTION_EPOCH=$(date -j -f "%Y-%m-%d %H:%M:%S.%3N" "$DISRUPTION_TIME" +%s 2>/dev/null || date -d "$DISRUPTION_TIME" +%s)
-    NOT_READY_EPOCH=$(date -j -f "%Y-%m-%d %H:%M:%S.%3N" "$FIRST_NOT_READY" +%s 2>/dev/null || date -d "$FIRST_NOT_READY" +%s)
-    DIFF=$((NOT_READY_EPOCH - DISRUPTION_EPOCH))
-    log "节点检测延迟: ${DIFF}秒"
 fi
 
 # 分析Service中断
@@ -187,9 +182,6 @@ log "\nService 可达性:"
 FIRST_SERVICE_DOWN=$(grep ",SERVICE,DOWN" service-status.csv | head -1 | cut -d',' -f1)
 if [ -n "$FIRST_SERVICE_DOWN" ]; then
     log "Service 首次中断: $FIRST_SERVICE_DOWN" $RED
-    SERVICE_DOWN_EPOCH=$(date -j -f "%Y-%m-%d %H:%M:%S.%3N" "$FIRST_SERVICE_DOWN" +%s 2>/dev/null || date -d "$FIRST_SERVICE_DOWN" +%s)
-    DIFF=$((SERVICE_DOWN_EPOCH - DISRUPTION_EPOCH))
-    log "Service 中断延迟: ${DIFF}秒"
 fi
 
 # 分析Pod直连
@@ -197,9 +189,6 @@ log "\nPod 直连状态:"
 FIRST_POD_DOWN=$(grep ",POD_DIRECT,DOWN" pod-direct-status.csv | head -1 | cut -d',' -f1)
 if [ -n "$FIRST_POD_DOWN" ]; then
     log "Pod 直连首次失败: $FIRST_POD_DOWN" $RED
-    POD_DOWN_EPOCH=$(date -j -f "%Y-%m-%d %H:%M:%S.%3N" "$FIRST_POD_DOWN" +%s 2>/dev/null || date -d "$FIRST_POD_DOWN" +%s)
-    DIFF=$((POD_DOWN_EPOCH - DISRUPTION_EPOCH))
-    log "Pod 直连中断延迟: ${DIFF}秒"
 fi
 
 # 分析Pod状态变化
@@ -207,40 +196,20 @@ log "\nPod 状态变化:"
 FIRST_POD_NOT_READY=$(grep ",POD,.*,False" pod-status.csv | head -1 | cut -d',' -f1)
 if [ -n "$FIRST_POD_NOT_READY" ]; then
     log "Pod 首次变为 NotReady: $FIRST_POD_NOT_READY" $YELLOW
-    POD_NOT_READY_EPOCH=$(date -j -f "%Y-%m-%d %H:%M:%S.%3N" "$FIRST_POD_NOT_READY" +%s 2>/dev/null || date -d "$FIRST_POD_NOT_READY" +%s)
-    DIFF=$((POD_NOT_READY_EPOCH - DISRUPTION_EPOCH))
-    log "Pod NotReady 延迟: ${DIFF}秒"
 fi
 
-# 生成时间线图表
+# 生成时间线
 log "\n=== 0-60秒时间线 ===" $BLUE
-log "格式: [时间偏移] 事件"
+log "网络中断时间: $DISRUPTION_TIME"
 
-# 创建综合时间线
-{
-    echo "0,网络中断,$DISRUPTION_TIME"
-    [ -n "$FIRST_POD_DOWN" ] && echo "$((POD_DOWN_EPOCH - DISRUPTION_EPOCH)),Pod直连失败,$FIRST_POD_DOWN"
-    [ -n "$FIRST_SERVICE_DOWN" ] && echo "$((SERVICE_DOWN_EPOCH - DISRUPTION_EPOCH)),Service中断,$FIRST_SERVICE_DOWN"
-    [ -n "$FIRST_POD_NOT_READY" ] && echo "$((POD_NOT_READY_EPOCH - DISRUPTION_EPOCH)),Pod NotReady,$FIRST_POD_NOT_READY"
-    [ -n "$FIRST_NOT_READY" ] && echo "$((NOT_READY_EPOCH - DISRUPTION_EPOCH)),Node NotReady,$FIRST_NOT_READY"
-} | sort -n -t',' -k1 | while IFS=',' read -r offset event time; do
-    printf "[T+%3ds] %-20s %s\n" "$offset" "$event" "$time"
-done | tee -a $LOG_FILE
-
-# 统计分析
-log "\n=== 统计分析 ===" $BLUE
-
-# Service可用性统计
-TOTAL_CHECKS=$(wc -l < service-status.csv)
-DOWN_CHECKS=$(grep ",DOWN" service-status.csv | wc -l)
-UP_CHECKS=$(grep ",UP" service-status.csv | wc -l)
-log "Service 检查统计: 总计=$TOTAL_CHECKS, 成功=$UP_CHECKS, 失败=$DOWN_CHECKS"
-
-# Pod直连统计
-TOTAL_POD_CHECKS=$(wc -l < pod-direct-status.csv)
-POD_DOWN_CHECKS=$(grep ",DOWN" pod-direct-status.csv | wc -l)
-POD_UP_CHECKS=$(grep ",UP" pod-direct-status.csv | wc -l)
-log "Pod直连检查统计: 总计=$TOTAL_POD_CHECKS, 成功=$POD_UP_CHECKS, 失败=$POD_DOWN_CHECKS"
+# 计算各事件的时间差
+if [ -n "$FIRST_POD_DOWN" ] && [ -n "$DISRUPTION_TIME" ]; then
+    # macOS 兼容的时间计算
+    DISRUPTION_EPOCH=$(date -j -f "%Y-%m-%d %H:%M:%S" "$DISRUPTION_TIME" +%s 2>/dev/null || date -d "$DISRUPTION_TIME" +%s)
+    POD_DOWN_EPOCH=$(date -j -f "%Y-%m-%d %H:%M:%S" "$FIRST_POD_DOWN" +%s 2>/dev/null || date -d "$FIRST_POD_DOWN" +%s)
+    DIFF=$((POD_DOWN_EPOCH - DISRUPTION_EPOCH))
+    log "Pod直连中断延迟: ${DIFF}秒"
+fi
 
 # 显示当前状态
 log "\n=== 当前状态 ===" $BLUE
