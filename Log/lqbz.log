@@ -1906,10 +1906,6 @@ EOF
 
 
 
-search_name,nick_name,send_wish
-MS 肖醒 - MFG ATS,醒妹,yes
-
-
 pip3 install numpy==1.21.6
 pip3 install pandas==1.3.5
 
