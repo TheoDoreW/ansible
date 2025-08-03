@@ -1854,8 +1854,6 @@ az network bastion ssh --name "xsvnet1b1" --resource-group "xsrg" --target-ip-ad
 az network bastion tunnel --name "xsvnet1b1" --resource-group "xsrg" --target-resource-id "/subscriptions//resourceGroups/MC_xsrg_xsaks1_eastus/providers/Microsoft.Compute/virtualMachineScaleSets/aks-testpool-41648467-vmss/virtualMachines/6" --resource-port "22" --port "2222"
 ssh azureuser@127.0.0.1 -p 2222
 
-<<<<<<< HEAD
-=======
 az vmss show --resource-group MC_xsrg_xsaks1_eastus --name aks-testpool-41648467-vmss --query "virtualMachineProfile.osProfile.adminUsername"
 
 
@@ -1906,9 +1904,231 @@ EOF
 
 
 
+search_name,nick_name,send_wish
+MS 肖醒 - MFG ATS,醒妹,yes
+
+
 pip3 install numpy==1.21.6
 pip3 install pandas==1.3.5
 
 
 pip3 uninstall wxpy itchat -y
 pip3 install -r requirements.txt
+
+RG="vwan-test-rg"
+LOCATION="eastus"
+VWAN_NAME="test-vwan"
+HUB_NAME="test-hub"
+VNET1_NAME="spoke-vnet1"
+VNET2_NAME="spoke-vnet2"
+
+
+az vm create \
+  --resource-group $RG \
+  --name vm2 \
+  --image Ubuntu2204 \
+  --vnet-name $VNET2_NAME \
+  --subnet subnet1 \
+  --admin-username azureuser \
+  --admin-password TestPassword123 \
+  --size Standard_B2s
+
+
+
+# 为特定节点查找 VMSS 实例 ID
+TARGET_NODE="aks-testpool-41648467-vmss000012"
+
+# 获取 Provider ID 并提取实例 ID
+PROVIDER_ID=$(kubectl get node $TARGET_NODE -o jsonpath='{.spec.providerID}')
+INSTANCE_ID=$(echo $PROVIDER_ID | sed 's/.*virtualMachines\///')
+
+echo "Node $TARGET_NODE corresponds to VMSS Instance ID: $INSTANCE_ID"
+
+# 然后重启
+az vmss stop -g MC_xsrg_xsaks1_eastus -n aks-testpool-41648467-vmss --instance-ids $INSTANCE_ID
+az vmss start -g MC_xsrg_xsaks1_eastus -n aks-testpool-41648467-vmss --instance-ids $INSTANCE_ID
+
+# 或删除并重新创建节点
+kubectl delete node $TARGET_NODE
+
+# 删除测试资源
+kubectl delete deployment nginx-test
+kubectl delete service nginx-test-svc
+
+
+./monitor-node-recovery.sh aks-testpool-41648467-vmss000013
+
+
+
+cat <<EOF | kubectl apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-test
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-test
+  template:
+    metadata:
+      labels:
+        app: nginx-test
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-test-svc
+spec:
+  selector:
+    app: nginx-test
+  ports:
+  - port: 80
+    targetPort: 80
+  type: LoadBalancer
+EOF
+
+
+
+
+
+cat <<EOF | kubectl apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-endpoint-test
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-endpoint
+  template:
+    metadata:
+      labels:
+        app: nginx-endpoint
+    spec:
+      # 确保两个 Pod 分布在不同节点
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - nginx-endpoint
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        # 每个 Pod 返回自己的信息
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Response from Pod: \$HOSTNAME on Node: \$NODE_NAME" > /usr/share/nginx/html/index.html
+          nginx -g 'daemon off;'
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        # 激进的 readinessProbe
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 2
+          periodSeconds: 1
+          timeoutSeconds: 1
+          successThreshold: 1
+          failureThreshold: 1  # 一次失败就标记为 NotReady
+        # 相对宽松的 livenessProbe
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 1
+          successThreshold: 1
+          failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-endpoint-svc
+  annotations:
+    # Azure LoadBalancer 健康检查配置
+    service.beta.kubernetes.io/azure-load-balancer-health-probe-interval: "5"
+    service.beta.kubernetes.io/azure-load-balancer-health-probe-num-of-probe: "2"
+spec:
+  selector:
+    app: nginx-endpoint
+  ports:
+  - port: 80
+    targetPort: 80
+  type: LoadBalancer
+  sessionAffinity: None  # 确保轮询
+EOF
+
+tolerations preferredDuringSchedulingIgnoredDuringExecution livenessProbe readinessProbe
+
+
+
+
+cat <<EOF | kubectl apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-test
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-test
+  template:
+    metadata:
+      labels:
+        app: nginx-test
+    spec:
+      affinity:
+        podAntiAffinity:
+          # “preferred” = 软约束，不满足时也可调度到同一节点
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: nginx-test
+              topologyKey: kubernetes.io/hostname
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-test-svc
+spec:
+  selector:
+    app: nginx-test
+  ports:
+  - port: 80
+    targetPort: 80
+  type: LoadBalancer
+EOF
+
+
+
+
