@@ -2129,6 +2129,43 @@ spec:
   type: LoadBalancer
 EOF
 
+root@clientVM-EastUS:~# more query_tm_endpoint.py
+import dns.resolver
+import argparse
+
+def get_traffic_manager_endpoint(tm_domain, dns_server=None):
+    """
+    查询 Traffic Manager 域名，返回最优 endpoint 的 CNAME。
+    """
+    resolver = dns.resolver.Resolver()
+    if dns_server:
+        resolver.nameservers = [dns_server]
+
+    try:
+        answers = resolver.resolve(tm_domain, 'CNAME')
+        for rdata in answers:
+            return str(rdata.target).rstrip('.')
+    except Exception as e:
+        print("DNS 查询失败:", e)
+        return None
+
+def main():
+    parser = argparse.ArgumentParser(description="Query Azure Traffic Manager for optimal endpoint.")
+    parser.add_argument("domain", help="Traffic Manager domain (e.g., yourprofile.trafficmanager.net)")
+    parser.add_argument("--dns-server", help="Optional DNS server IP to simulate client location", default=None)
+    args = parser.parse_args()
+
+    endpoint = get_traffic_manager_endpoint(args.domain, args.dns_server)
+    if endpoint:
+        print("✅ 最优 endpoint:", endpoint)
+    else:
+        print("❌ 无法获取最优 endpoint")
+
+if __name__ == "__main__":
+    main()
 
 
-
+SGP
+都柏林
+西雅图
+圣保罗
