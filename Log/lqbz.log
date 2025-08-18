@@ -2169,3 +2169,67 @@ SGP
 都柏林
 西雅图
 圣保罗
+
+
+az aks nodepool scale \
+  --resource-group xsrg \
+  --cluster-name xsaks1 \
+  --name testpool \
+  --node-count 2
+
+
+curl -s \
+  'https://dns.google/resolve?name=myspeechtm.trafficmanager.net&type=CNAME&edns_client_subnet=94.200.0.0/24' \
+  | jq '.Answer'
+
+http://myspeechtm.trafficmanager.net
+
+
+curl -s -H 'accept: application/dns-json' \
+  "https://cloudflare-dns.com/dns-query?name=myspeechtm.trafficmanager.net&type=CNAME&edns_client_subnet=94.200.0.0/24" \
+  | jq '.Answer'
+
+
+
+xinsheng.wang@MacBook Pro speedup-scaling % kubectl apply -f smart-trigger-2c8g.yaml
+configmap/smart-trigger created
+serviceaccount/smart-trigger created
+clusterrole.rbac.authorization.k8s.io/smart-trigger created
+clusterrolebinding.rbac.authorization.k8s.io/smart-trigger created
+deployment.apps/smart-trigger created
+
+
+az aks nodepool update \
+  -g xsrg \
+  --cluster-name xsdraks1 \
+  -n testpool \
+  --enable-cluster-autoscaler \
+  --min-count 2 \
+  --max-count 5
+
+
+az aks update --resource-group myResourceGroup --name myAKSCluster --cluster-autoscaler-profile scan-interval=30s,scale-down-delay-after-add=0m,scale-down-delay-after-failure=1m,scale-down-unneeded-time=3m,scale-down-unready-time=3m,max-graceful-termination-sec=30,skip-nodes-with-local-storage=false,max-empty-bulk-delete=1000,max-total-unready-percentage=100,ok-total-unready-count=1000,max-node-provision-time=15m
+
+
+az aks update \
+  --resource-group xsrg \
+  --name xsaks1 \
+  --disable-cluster-autoscaler
+
+az aks update --name   --name xsdraks1 \
+ --resource-group xsrg --node-provisioning-mode Auto
+
+
+az aks update \
+--resource-group xsrg \
+--name xsdraks1 \
+--cluster-autoscaler-profile \
+scan-interval=10s,scale-down-delay-after-add=0m,scale-down-delay-after-failure=1m,scale-down-unneeded-time=3m,scale-down-unready-time=3m,max-graceful-termination-sec=30,skip-nodes-with-local-storage=false,max-empty-bulk-delete=1000,max-total-unready-percentage=100,ok-total-unready-count=1000,max-node-provision-time=15m
+
+
+
+
+
+
+
+
