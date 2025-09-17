@@ -2129,102 +2129,16 @@ spec:
   type: LoadBalancer
 EOF
 
-root@clientVM-EastUS:~# more query_tm_endpoint.py
-import dns.resolver
-import argparse
-
-def get_traffic_manager_endpoint(tm_domain, dns_server=None):
-    """
-    查询 Traffic Manager 域名，返回最优 endpoint 的 CNAME。
-    """
-    resolver = dns.resolver.Resolver()
-    if dns_server:
-        resolver.nameservers = [dns_server]
-
-    try:
-        answers = resolver.resolve(tm_domain, 'CNAME')
-        for rdata in answers:
-            return str(rdata.target).rstrip('.')
-    except Exception as e:
-        print("DNS 查询失败:", e)
-        return None
-
-def main():
-    parser = argparse.ArgumentParser(description="Query Azure Traffic Manager for optimal endpoint.")
-    parser.add_argument("domain", help="Traffic Manager domain (e.g., yourprofile.trafficmanager.net)")
-    parser.add_argument("--dns-server", help="Optional DNS server IP to simulate client location", default=None)
-    args = parser.parse_args()
-
-    endpoint = get_traffic_manager_endpoint(args.domain, args.dns_server)
-    if endpoint:
-        print("✅ 最优 endpoint:", endpoint)
-    else:
-        print("❌ 无法获取最优 endpoint")
-
-if __name__ == "__main__":
-    main()
 
 
-SGP
-都柏林
-西雅图
-圣保罗
+Akzo Nobel (Asia) Co., Ltd
+Account
 
 
-az aks nodepool scale \
-  --resource-group xsrg \
-  --cluster-name xsaks1 \
-  --name testpool \
-  --node-count 2
-
-
-curl -s \
-  'https://dns.google/resolve?name=myspeechtm.trafficmanager.net&type=CNAME&edns_client_subnet=94.200.0.0/24' \
-  | jq '.Answer'
-
-http://myspeechtm.trafficmanager.net
-
-
-curl -s -H 'accept: application/dns-json' \
-  "https://cloudflare-dns.com/dns-query?name=myspeechtm.trafficmanager.net&type=CNAME&edns_client_subnet=94.200.0.0/24" \
-  | jq '.Answer'
+https://microsoftapc-my.sharepoint.com/:b:/g/personal/xinswang_microsoft_com/EVLxRdBE3CFGmA70mhMD1LQBZ_vMtgGMCZzqTyzwvdjJng?e=vFchp4
 
 
 
-xinsheng.wang@MacBook Pro speedup-scaling % kubectl apply -f smart-trigger-2c8g.yaml
-configmap/smart-trigger created
-serviceaccount/smart-trigger created
-clusterrole.rbac.authorization.k8s.io/smart-trigger created
-clusterrolebinding.rbac.authorization.k8s.io/smart-trigger created
-deployment.apps/smart-trigger created
-
-
-az aks nodepool update \
-  -g xsrg \
-  --cluster-name xsdraks1 \
-  -n testpool \
-  --enable-cluster-autoscaler \
-  --min-count 2 \
-  --max-count 5
-
-
-az aks update --resource-group myResourceGroup --name myAKSCluster --cluster-autoscaler-profile scan-interval=30s,scale-down-delay-after-add=0m,scale-down-delay-after-failure=1m,scale-down-unneeded-time=3m,scale-down-unready-time=3m,max-graceful-termination-sec=30,skip-nodes-with-local-storage=false,max-empty-bulk-delete=1000,max-total-unready-percentage=100,ok-total-unready-count=1000,max-node-provision-time=15m
-
-
-az aks update \
-  --resource-group xsrg \
-  --name xsaks1 \
-  --disable-cluster-autoscaler
-
-az aks update --name   --name xsdraks1 \
- --resource-group xsrg --node-provisioning-mode Auto
-
-
-az aks update \
---resource-group xsrg \
---name xsdraks1 \
---cluster-autoscaler-profile \
-scan-interval=10s,scale-down-delay-after-add=0m,scale-down-delay-after-failure=1m,scale-down-unneeded-time=3m,scale-down-unready-time=3m,max-graceful-termination-sec=30,skip-nodes-with-local-storage=false,max-empty-bulk-delete=1000,max-total-unready-percentage=100,ok-total-unready-count=1000,max-node-provision-time=15m
 
 
 
