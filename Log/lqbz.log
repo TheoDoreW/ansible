@@ -2129,79 +2129,274 @@ spec:
   type: LoadBalancer
 EOF
 
+root@clientVM-EastUS:~# more query_tm_endpoint.py
+import dns.resolver
+import argparse
+
+def get_traffic_manager_endpoint(tm_domain, dns_server=None):
+    """
+    查询 Traffic Manager 域名，返回最优 endpoint 的 CNAME。
+    """
+    resolver = dns.resolver.Resolver()
+    if dns_server:
+        resolver.nameservers = [dns_server]
+
+    try:
+        answers = resolver.resolve(tm_domain, 'CNAME')
+        for rdata in answers:
+            return str(rdata.target).rstrip('.')
+    except Exception as e:
+        print("DNS 查询失败:", e)
+        return None
+
+def main():
+    parser = argparse.ArgumentParser(description="Query Azure Traffic Manager for optimal endpoint.")
+    parser.add_argument("domain", help="Traffic Manager domain (e.g., yourprofile.trafficmanager.net)")
+    parser.add_argument("--dns-server", help="Optional DNS server IP to simulate client location", default=None)
+    args = parser.parse_args()
+
+    endpoint = get_traffic_manager_endpoint(args.domain, args.dns_server)
+    if endpoint:
+        print("✅ 最优 endpoint:", endpoint)
+    else:
+        print("❌ 无法获取最优 endpoint")
+
+if __name__ == "__main__":
+    main()
 
 
-Akzo Nobel (Asia) Co., Ltd
-Account
+SGP
+都柏林
+西雅图
+圣保罗
 
 
-https://microsoftapc-my.sharepoint.com/:b:/g/personal/xinswang_microsoft_com/EVLxRdBE3CFGmA70mhMD1LQBZ_vMtgGMCZzqTyzwvdjJng?e=vFchp4
+az aks nodepool scale \
+  --resource-group xsrg \
+  --cluster-name xsaks1 \
+  --name testpool \
+  --node-count 2
 
 
-openssl s_client \
-  -connect 10.11.1.4:2225 \
-  -showcerts \
-  -cert /opt/azurecloudhsm/cert/client.crt \
-  -key /opt/azurecloudhsm/cert/client.key \
+curl -s \
+  'https://dns.google/resolve?name=myspeechtm.trafficmanager.net&type=CNAME&edns_client_subnet=94.200.0.0/24' \
+  | jq '.Answer'
+
+http://myspeechtm.trafficmanager.net
 
 
-hsm1.yycloudhsm1-amekd7hgcbdmeaf6.privatelink.cloudhsm.azure.net
-hsm2.yycloudhsm1-amekd7hgcbdmeaf6.privatelink.cloudhsm.azure.net
-hsm3.yycloudhsm1-amekd7hgcbdmeaf6.privatelink.cloudhsm.azure.net
+curl -s -H 'accept: application/dns-json' \
+  "https://cloudflare-dns.com/dns-query?name=myspeechtm.trafficmanager.net&type=CNAME&edns_client_subnet=94.200.0.0/24" \
+  | jq '.Answer'
+
+
+
+xinsheng.wang@MacBook Pro speedup-scaling % kubectl apply -f smart-trigger-2c8g.yaml
+configmap/smart-trigger created
+serviceaccount/smart-trigger created
+clusterrole.rbac.authorization.k8s.io/smart-trigger created
+clusterrolebinding.rbac.authorization.k8s.io/smart-trigger created
+deployment.apps/smart-trigger created
+
+
+az aks nodepool update \
+  -g xsrg \
+  --cluster-name xsdraks1 \
+  -n testpool \
+  --enable-cluster-autoscaler \
+  --min-count 2 \
+  --max-count 5
+
+
+az aks update --resource-group myResourceGroup --name myAKSCluster --cluster-autoscaler-profile scan-interval=30s,scale-down-delay-after-add=0m,scale-down-delay-after-failure=1m,scale-down-unneeded-time=3m,scale-down-unready-time=3m,max-graceful-termination-sec=30,skip-nodes-with-local-storage=false,max-empty-bulk-delete=1000,max-total-unready-percentage=100,ok-total-unready-count=1000,max-node-provision-time=15m
+
+
+az aks update \
+  --resource-group xsrg \
+  --name xsaks1 \
+  --disable-cluster-autoscaler
+
+az aks update --name   --name xsdraks1 \
+ --resource-group xsrg --node-provisioning-mode Auto
+
+
+az aks update \
+--resource-group xsrg \
+--name xsdraks1 \
+--cluster-autoscaler-profile \
+scan-interval=10s,scale-down-delay-after-add=0m,scale-down-delay-after-failure=1m,scale-down-unneeded-time=3m,scale-down-unready-time=3m,max-graceful-termination-sec=30,skip-nodes-with-local-storage=false,max-empty-bulk-delete=1000,max-total-unready-percentage=100,ok-total-unready-count=1000,max-node-provision-time=15m
+
+
+
+
+root
+administrator
+Microsoft2025
+
+
+
+$global:scriptPath = $myinvocation.mycommand.definition
+
+function Restart-AsAdmin {
+    $pwshCommand = "powershell"
+    if ($PSVersionTable.PSVersion.Major -ge 6) {
+        $pwshCommand = "pwsh"
+    }
+
+    try {
+        Write-Host "This script requires administrator permissions to install the Azure Connected Machine Agent. Attempting to restart script with elevated permissions..."
+        $arguments = "-NoExit -Command `"& '$scriptPath'`""
+        Start-Process $pwshCommand -Verb runAs -ArgumentList $arguments
+        exit 0
+    } catch {
+        throw "Failed to elevate permissions. Please run this script as Administrator."
+    }
+}
+
+try {
+    if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+        if ([System.Environment]::UserInteractive) {
+            Restart-AsAdmin
+        } else {
+            throw "This script requires administrator permissions to install the Azure Connected Machine Agent. Please run this script as Administrator."
+        }
+}
+
+    $env:SUBSCRIPTION_ID = "15e95d2e-6cd0-4d1c-96da-b8e055a62ee8";
+    $env:RESOURCE_GROUP = "amerrg";
+    $env:TENANT_ID = "71adee5d-7b4b-4e47-8814-ade2a984a543";
+    $env:LOCATION = "chinanorth3";
+    $env:AUTH_TYPE = "token";
+    $env:CORRELATION_ID = "1269cd94-7d87-45e0-a16d-db6d77278f9c";
+    $env:CLOUD = "AzureChinaCloud";
+    
+
+    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor 3072;
+
+    $azcmagentPath = Join-Path $env:SystemRoot "AzureConnectedMachineAgent"
+    if (-Not (Test-Path -Path $azcmagentPath)) {
+        New-Item -Path $azcmagentPath -ItemType Directory
+        Write-Output "Directory '$azcmagentPath' created"
+    }
+
+    $tempPath = Join-Path $azcmagentPath "temp"
+    if (-Not (Test-Path -Path $tempPath)) {
+        New-Item -Path $tempPath -ItemType Directory
+        Write-Output "Directory '$tempPath' created"
+    }
+
+    $installScriptPath = Join-Path $tempPath "install_windows_azcmagent.ps1"
+    Invoke-WebRequest -UseBasicParsing -Uri "https://gbl.his.arc.azure.cn/azcmagent-windows" -TimeoutSec 30 -OutFile "$installScriptPath";
+    & "$installScriptPath";
+    if ($LASTEXITCODE -ne 0) { exit 1; }
+    Start-Sleep -Seconds 5;
+    & "$env:ProgramW6432\AzureConnectedMachineAgent\azcmagent.exe" connect --resource-group "$env:RESOURCE_GROUP" --tenant-id "$env:TENANT_ID" --location "$env:LOCATION" --subscription-id "$env:SUBSCRIPTION_ID" --cloud "$env:CLOUD" --tags 'Datacenter=Aliyun,City=BeiJing,CountryOrRegion=China' --correlation-id "$env:CORRELATION_ID";
+}
+catch {
+    $logBody = @{subscriptionId="$env:SUBSCRIPTION_ID";resourceGroup="$env:RESOURCE_GROUP";tenantId="$env:TENANT_ID";location="$env:LOCATION";correlationId="$env:CORRELATION_ID";authType="$env:AUTH_TYPE";operation="onboarding";messageType=$_.FullyQualifiedErrorId;message="$_";};
+    Invoke-WebRequest -UseBasicParsing -Uri "https://gbl.his.arc.azure.cn/log" -Method "PUT" -Body ($logBody | ConvertTo-Json) | out-null;
+    Write-Host  -ForegroundColor red $_.Exception;
+}
+
+
+admin@xinshengw.partner.onmschina.cn
+Xinxin15@912.
+
+
+root是121057248@qq.com，Zhwchuibe123!@#
+
+
+172.203.128.36 (yyvnet1vpngw1pip1)
+
+
+yyvpc1vpngw1
+
+yyvpc1vpngw1-with-yyvnet1vpngw1
+
+IPSec Tunnel #1
+Pre-Shared Key           : WRzY6vH1l42xcRUrqbygM4pbhQt02f2L
+
+#2: IPSec Configuration
+Outside IP Addresses:
+  - Customer Gateway 		        : 172.203.128.36
+  - Virtual Private Gateway	    : 34.237.28.172
+
+IPSec Tunnel #2
+  - Pre-Shared Key           : 167sBfPWWPc_G5U86H6L2W_rDtmewwBX
+#2: IPSec Configuration
+Outside IP Addresses:
+  - Customer Gateway 		        : 172.203.128.36
+  - Virtual Private Gateway	    : 54.173.15.85
+
 
 wget -p ~/ https://github.com/microsoft/MicrosoftAzureCloudHSM/releases/download/AzureCloudHSM-ClientSDK-2.0.1.2/AzureCloudHSM-ClientSDK-2.0.1.2.deb
 
 
-https://github.com/microsoft/MicrosoftAzureCloudHSM/releases/download/AzureCloudHSM-ClientSDK-2.0.2.1/AzureCloudHSM-ClientSDK-2.0.2.1.deb
+10.11.1.4 hsm1.yycloudhsm1-amekd7hgcbdmeaf6 
+
+
+./azcloudhsm_util singlecmd loginHSM -u CU -s cu1 -p Microsoft2025 genRSAKeyPair -m 2048 -e 65537 -l $SIGNING_KEY_ID -id $SIGNING_KEY_ID
+
+./azcloudhsm_util singlecmd loginHSM -u CU -s $PKCS11_S -p $PKCS11_P genRSAKeyPair -m 2048 -e 65537 -l $SIGNING_KEY_ID -id $SIGNING_KEY_ID
+
+
+10.11.1.4 hsm1.yycloudhsm1-amekd7hgcbdmeaf6.privatelink.cloudhsm.azure.net
 
 
 {
     "servers": [
-        { "hostname": "hsm1.yycloudhsm1-amekd7hgcbdmeaf6.privatelink.cloudhsm.azure.net", "port": 2225 }
-    ]
+    {
+        "hostname" : "hsm1.yycloudhsm1-amekd7hgcbdmeaf6.privatelink.cloudhsm.azure.net"
+    }]
 }
 
 
-https://github.com/microsoft/MicrosoftAzureCloudHSM/releases/download/AzureCloudHSM-ClientSDK-2.0.2.1/AzureCloudHSM-ClientSDK-OpenSSL3-2.0.2.1.deb
+FQDN="hsm1.yycloudhsm1-amekd7hgcbdmeaf6.privatelink.cloudhsm.azure.net"  # ←替换成你的
+getent hosts "$FQDN"          # 应返回私网 IP
+nc -vz "$FQDN" 1792           # 端口探测（无 nc 可用 telnet）
 
 
-（开个玩笑）好的谢谢主持人，今天时间有限，那我就简单讲两句；
-首先，想表达感激之情，真的，要感谢的人和事太多太多。
-最重要的就是要感谢缘分吧，缘分真是个奇妙的东西，它让我们两个相遇、相知、相爱，并一起走到今天，
-相信我们也会一直携手走到白首；
-然后要感谢天公作美，赐予我们这样一个晴朗的好天气；
-其次感谢在座的每一位尊长和朋友，尤其是从外地、甚至从海外赶来的亲友，感谢你们跨越距离和时差，
-把祝福带到我们身边；还有那些没能到场的朋友们，也要感谢，是你们所有人的祝福，让今天的婚礼变得圆满幸福且有意义。
-最后感谢爸爸妈妈岳父岳母对我们两个的养育之情；这里不展开多说，怕哭（笑），今天早就说好了不哭，要开开心心的；
-时间有限，先感谢到这；
-
-接下来，我想说一下“三十而立”；
-这个“立”字，含义很多，今天我想说说其中一层含义：立家。
-因为从今天起，我们彼此的身份又多了一个，肩上的责任也多了一份。
-我会继续做一个靠谱的儿子，一个合格的女婿，一个值得托付的丈夫；
-以后也许还会解锁“某某的爸爸”这个新身份，我相信对卢鑫来说也是一样；
-当然，这个角色我们俩还需要认真练级，争取早日练满级（笑）
-
-最后我想说，愿我们在以后的生活中，彼此的陪伴中，都能像今天这样，心怀感恩，满怀喜悦吧。说完了，谢谢大家；
+loginHSM CO admin adminpassword
 
 
+ARCH=$(dpkg --print-architecture)
+printf "deb [arch=%s] http://security.ubuntu.com/ubuntu focal-security main\n" "$ARCH" \
+  | tee /etc/apt/sources.list.d/focal-security.list
 
-openssl req -new -newkey rsa:2048 -nodes \
-  -keyout /opt/azurecloudhsm/cert/client.key \
-  -out /opt/azurecloudhsm/cert/client.csr \
-  -subj "/C=US/ST=CA/O=Microsoft/OU=CloudHSM/CN=client"
+cat >/etc/apt/preferences.d/libssl1.1 <<'EOF'
+Package: libssl1.1
+Pin: release n=focal-security
+Pin-Priority: 1001
+EOF
+
+apt-get update
+apt-get install -y libssl1.1
 
 
+dig @10.11.0.254 hsm1.yycloudhsm1-amekd7hgcbdmeaf6.privatelink.cloudhsm.azure.net
 
-{
-  "hostname": "hsm1.yycloudhsm1-amekd7hgcbdmeaf6.privatelink.cloudhsm.azure.net",
-  "port": 2225,
-  "enable_e2e": 1,
-  "ca_cert_file": "/opt/azurecloudhsm/cert/POAC.crt",
-  "client_cert_file": "/opt/azurecloudhsm/cert/client.crt",
-  "client_key_file": "/opt/azurecloudhsm/cert/client.key",
-  "log_level": "INFO",
-  "timeout": 30,
-  "retry_count": 3
-}
 
+az vm image list-offers -l chinanorth3 -p OpenLogic
+
+az vm image list -l chinanorth3 -f Redhat --all
+
+
+# 查看当前配置
+az aks show -g xsrg -n xsaks1 --query addonProfiles.omsagent
+
+# 禁用 Container Insights
+az aks disable-addons -n xsaks1 -g xsrg -a monitoring
+
+# 重新启用并指定新的 Log Analytics Workspace
+az aks enable-addons -n xsaks1 -g xsrg -a monitoring --workspace-resource-id /subscriptions/ba10fd82-edf7-4c96-8c6a-2f46085f56f2/resourceGroups/xsrg/providers/Microsoft.OperationalInsights/workspaces/xsaks1la1
+
+
+# 查看当前配置
+az aks show -g xsrg -n xsaks1 --query addonProfiles.omsagent
+
+# 禁用 Container Insights
+az aks disable-addons -n xsaks1 -g xsrg -a monitoring
+
+# 重新启用并指定新的 Log Analytics Workspace
+az aks enable-addons -n xsaks1 -g xsrg -a monitoring \
+  --workspace-resource-id /subscriptions/<subscriptionId>/resourcegroups/<resourceGroup>/providers/microsoft.operationalinsights/workspaces/<workspaceName>
