@@ -2300,6 +2300,7 @@ catch {
 
 
 admin@xinshengw.partner.onmschina.cn
+Microsoft2025
 Xinxin15@912.
 
 
@@ -2400,3 +2401,16 @@ az aks disable-addons -n xsaks1 -g xsrg -a monitoring
 # 重新启用并指定新的 Log Analytics Workspace
 az aks enable-addons -n xsaks1 -g xsrg -a monitoring \
   --workspace-resource-id /subscriptions/<subscriptionId>/resourcegroups/<resourceGroup>/providers/microsoft.operationalinsights/workspaces/<workspaceName>
+
+
+MngEnvMCAP271924.onmicrosoft.com
+Microsoft2025
+
+
+cherry1708outlook.onmicrosoft.com
+user principal name: Xinsheng@cherry1708outlook.onmicrosoft.com
+password: WSXwsx12345
+
+20.78.212.11
+msadmin
+Microsoft2025
