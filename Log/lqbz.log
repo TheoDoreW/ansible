@@ -2459,15 +2459,21 @@ TestPassword123
 Test-Path "\\avdsa111.file.core.windows.net\fslogix"
 
 
-https://ccavdsa1.file.core.windows.net/
 
+
+
+https://ccavdsa1.file.core.windows.net/
 icacls Z: /grant "gta.lol\AVD - Users:(M)"
 icacls Z: /grant "Creator Owner:(OI)(CI)(IO)(M)"
 icacls Z: /remove "Authenticated Users"
 icacls Z: /remove "Builtin\Users"
 
 
+
+
+
 wxs@gta.lol
+
 
 $regPath = "HKLM:\SOFTWARE\FSLogix\profiles"
 New-ItemProperty -Path $regPath -Name Enabled -PropertyType DWORD -Value 1 -Force
@@ -2483,3 +2489,5 @@ $UserName = "wxs"
 Get-CimInstance -ClassName Win32_UserProfile | Where-Object {
     $_.LocalPath -like "*$UserName"
 } | Remove-CimInstance
+
+
