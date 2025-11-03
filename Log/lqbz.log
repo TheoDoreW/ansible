@@ -2410,7 +2410,76 @@ Microsoft2025
 cherry1708outlook.onmicrosoft.com
 user principal name: Xinsheng@cherry1708outlook.onmicrosoft.com
 password: WSXwsx12345
+msadmin@cherry1708outlook.onmicrosoft.com
 
-20.78.212.11
+
+172.207.11.75
 msadmin
+aizhihuxiao
 Microsoft2025
+
+DevUser1@cherry1708outlook.onmicrosoft.com
+DevUser2@cherry1708outlook.onmicrosoft.com
+OPUser1@cherry1708outlook.onmicrosoft.com
+OPUser2@cherry1708outlook.onmicrosoft.com
+
+https://github.com/Azure-Samples/azure-files-samples/releases/download/v0.3.2/AzFilesHybrid.zip
+
+# 以管理员身份运行 PowerShell
+$cred = Get-Credential    # 输入有权限的域账号，例如 corp\domainjoiner
+Add-Computer -DomainName cherry1708outlook.onmicrosoft.com -Credential $cred -Restart
+``
+
+curl.exe -L -o AzFilesHybrid.zip "https://github.com/Azure-Samples/azure-files-samples/releases/download/v0.3.2/AzFilesHybrid.zip"
+``
+
+
+$subscriptionId="dc492c77-9a23-4581-badb-05548297c9ee"
+$resourceGroupName="ccrg"
+$storageAccountName="ccavdsa1"
+Join-AzStorageAccount `
+  -ResourceGroupName $ResourceGroupName `
+  -StorageAccountName $StorageAccountName `
+  -DomainAccountType "ComputerAccount" `
+  -EncryptionType "AES256"
+
+
+$subscriptionId = "subscription-id"
+$resourceGroupName = "resource-group-name"
+$storageAccountName = "storage-account-name"
+
+Join-AzStorageAccount -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName -DomainAccountType "ComputerAccount"
+
+
+
+net use Z: \\avdsa11.file.core.windows.net\fslogix1 
+UserName
+TestPassword123
+
+Test-Path "\\avdsa111.file.core.windows.net\fslogix"
+
+
+https://ccavdsa1.file.core.windows.net/
+
+icacls Z: /grant "gta.lol\AVD - Users:(M)"
+icacls Z: /grant "Creator Owner:(OI)(CI)(IO)(M)"
+icacls Z: /remove "Authenticated Users"
+icacls Z: /remove "Builtin\Users"
+
+
+wxs@gta.lol
+
+$regPath = "HKLM:\SOFTWARE\FSLogix\profiles"
+New-ItemProperty -Path $regPath -Name Enabled -PropertyType DWORD -Value 1 -Force
+New-ItemProperty -Path $regPath -Name VHDLocations -PropertyType MultiString -Value \\ccavdsa1.file.core.windows.net\fslogix1 -Force
+
+
+Test-Path "\\avdsa11.file.core.windows.net\fslogix1"
+
+
+
+# 删除指定用户的配置文件（例如用户名为 testuser）
+$UserName = "wxs"
+Get-CimInstance -ClassName Win32_UserProfile | Where-Object {
+    $_.LocalPath -like "*$UserName"
+} | Remove-CimInstance
