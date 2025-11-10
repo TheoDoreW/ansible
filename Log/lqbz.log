@@ -1216,10 +1216,6 @@ helm uninstall tpappgw1agic
 helm uninstall tpappgw2agic
 
 
-test01@bddata01.onmicrosoft.com
-Wulo0412170
-
-
 
 # This file contains the essential configs for the ingress controller helm chart
  
