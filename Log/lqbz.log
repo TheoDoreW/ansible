@@ -2401,6 +2401,66 @@ az aks disable-addons -n xsaks1 -g xsrg -a monitoring
 # 重新启用并指定新的 Log Analytics Workspace
 az aks enable-addons -n xsaks1 -g xsrg -a monitoring \
   --workspace-resource-id /subscriptions/<subscriptionId>/resourcegroups/<resourceGroup>/providers/microsoft.operationalinsights/workspaces/<workspaceName>
+<<<<<<< HEAD
+
+
+172.190.206.137
+msadmin
+Microsoft2025
+admin@MngEnvMCAP271924.onmicrosoft.com\msadmin
+
+Connect-AzAccount -Environment AzureCloud
+
+Add-Computer -DomainName "MngEnvMCAP271924.onmicrosoft.com" -Credential "MngEnvMCAP271924\msadmin" -Restart
+
+
+$subscriptionId="ba10fd82-edf7-4c96-8c6a-2f46085f56f2"
+$resourceGroupName="xsrg"
+$storageAccountName="avddatasa1"
+Join-AzStorageAccount -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName -DomainAccountType "ComputerAccount" -EncryptionType "AES256"
+
+
+$subscriptionId = "ba10fd82-edf7-4c96-8c6a-2f46085f56f2"
+$resourceGroupName = "xsrg"
+$storageAccountName = "avddatasa1"
+Join-AzStorageAccount `
+  -ResourceGroupName $ResourceGroupName `
+  -StorageAccountName $StorageAccountName `
+  -DomainAccountType "ComputerAccount" `
+  -EncryptionType "AES256"
+
+
+
+# 1) 先获取域管理员或有“加入域”权限的账号凭据
+$cred = Get-Credential -UserName "MngEnvMCAP271924.onmicrosoft.com\msadmin"  # 会弹窗输入密码
+
+# 2) 加入本地 AD DS 域（示例：contoso.com），并重启
+Add-Computer -DomainName "contoso.com" -Credential $cred -Restart
+
+
+Add-Computer -DomainName "MngEnvMCAP271924.onmicrosoft.com" -Credential (Get-Credential)
+Restart-Computer
+
+
+
+Join-AzStorageAccount `
+  -ResourceGroupName $ResourceGroupName `
+  -StorageAccountName $StorageAccountName `
+  -DomainAccountType "ComputerAccount" `
+  -EncryptionType "AES256"
+		
+Join-AzStorageAccount `
+  -ResourceGroupName $ResourceGroupName `
+  -StorageAccountName $StorageAccountName `
+  -SamAccountName "avddatasa1" `
+  -DomainAccountType "ComputerAccount"
+
+
+net use Z:\\avddatasa1.blob.core.windows.net\fslogix1 +ASttBpPcA== /user:Azure\avddatasa1
+
+
+net use <desired-drive-letter>: \\<storage-account-name>.file.core.windows.net\<share-name> <storage-account-key> /user:Azure\<storage-account-name>
+=======
 
 
 MngEnvMCAP271924.onmicrosoft.com
@@ -2473,7 +2533,7 @@ icacls Z: /remove "Builtin\Users"
 
 
 wxs@gta.lol
-
+Microsoft2025
 
 $regPath = "HKLM:\SOFTWARE\FSLogix\profiles"
 New-ItemProperty -Path $regPath -Name Enabled -PropertyType DWORD -Value 1 -Force
@@ -2489,3 +2549,6 @@ $UserName = "wxs"
 Get-CimInstance -ClassName Win32_UserProfile | Where-Object {$_.LocalPath -like "*$UserName"} | Remove-CimInstance
 
 
+
+
+cmdkey.exe /add:duostoprodchnorth001.file.core.windows.net /user:localhost\avdaadstorage /pass:xxxxxxxxxxxxxxxx
