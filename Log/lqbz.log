@@ -66,7 +66,6 @@ az monitor data-collection rule association create \
   --rule-id $DCR_ID
 
 
-https://prod-05.eastasia.logic.azure.com:443/workflows/79d114de1ca54018be1c9b8570277537/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=_Z2uFWkgZ4bJ074kzqVOXtxoZPaD9vWmnuH7dyVpfck
 
 
 
