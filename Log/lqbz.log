@@ -1,0 +1,151 @@
+请生成一个完整的测试用例 
+
+一台 Azure Linux VM（最好是红帽系的），通过 Azure Monitor Agent 监控基础的 Metric（比如 CPU MEM NET DISK 等），然后想针对这些指标做自定义告警，参考的 Link ：https://learn.microsoft.com/en-us/azure/azure-monitor/alerts/alerts-common-schema
+
+能不能从 VM 创建开始 一直到 Common Alert Schema 配置，端到端给一个完整的测试用例
+
+
+
+
+
+RG="rg-ama-common-schema-demo"
+LOCATION="eastasia"
+VM_NAME="vm-rhel-demo"
+VM_SIZE="Standard_B2s"
+ADMIN_USER="azureuser"
+
+DCR_NAME="dcr-${VM_NAME}-metrics"
+DCR_NAME="dcr-vm-rhel-demo-metrics"
+AG_NAME="ag-ama-common-schema"
+AG_SHORT="AG-Common"
+LOGIC_APP_NAME="la-alert-formatter"
+
+EMAIL_TO="xinsheng.wang@outlook.com"
+
+
+
+# 1) 资源组
+az group create --name $RG --location $LOCATION
+
+# 2) 创建 RHEL VM（生成 SSH Key）
+az vm create \
+  --resource-group $RG \
+  --name $VM_NAME \
+  --image RedHat:RHEL:9-lvm-gen2:latest \
+  --size $VM_SIZE \
+  --admin-username $ADMIN_USER \
+  --authentication-type password \
+  --admin-password "" \
+  --public-ip-sku Standard
+
+VM_ID=$(az vm show -g $RG -n $VM_NAME --query id -o tsv)
+
+{
+  "fqdns": "",
+  "id": "/subscriptions/ba10fd82-edf7-4c96-8c6a-2f46085f56f2/resourceGroups/rg-ama-common-schema-demo/providers/Microsoft.Compute/virtualMachines/vm-rhel-demo",
+  "location": "eastasia",
+  "macAddress": "60-45-BD-56-64-C1",
+  "powerState": "VM running",
+  "privateIpAddress": "10.0.0.4",
+  "publicIpAddress": "52.175.48.129",
+  "resourceGroup": "rg-ama-common-schema-demo"
+}
+
+
+DCR_ID=$(az monitor data-collection rule show -g $RG -n $DCR_NAME --query id -o tsv)
+
+
+az vm extension set -g $RG --vm-name $VM_NAME \
+  --name AzureMonitorLinuxAgent \
+  --publisher Microsoft.Azure.Monitor \
+  --enable-auto-upgrade true
+
+az monitor data-collection rule association create \
+  --name "assoc-${VM_NAME}" \
+  --resource $VM_ID \
+  --rule-id $DCR_ID
+
+
+https://prod-05.eastasia.logic.azure.com:443/workflows/79d114de1ca54018be1c9b8570277537/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=_Z2uFWkgZ4bJ074kzqVOXtxoZPaD9vWmnuH7dyVpfck
+
+
+
+{
+  "schemaId": "azureMonitorCommonAlertSchema",
+  "data": {
+    "essentials": {
+      "alertId": "/subscriptions/<subscription ID>/providers/Microsoft.AlertsManagement/alerts/aaaa0a0a-bb1b-cc2c-dd3d-eeeeee4e4e4e",
+      "alertRule": "WCUS-R2-Gen2",
+      "severity": "Sev3",
+      "signalType": "Metric",
+      "monitorCondition": "Resolved",
+      "monitoringService": "Platform",
+      "alertTargetIDs": [
+        "/subscriptions/<subscription ID>/resourcegroups/pipelinealertrg/providers/microsoft.compute/virtualmachines/wcus-r2-gen2"
+      ],
+      "configurationItems": [
+        "wcus-r2-gen2"
+      ],
+      "originAlertId": "3f2d4487-b0fc-4125-8bd5-7ad17384221e_PipeLineAlertRG_microsoft.insights_metricAlerts_WCUS-R2-Gen2_-117781227",
+      "firedDateTime": "2019-03-22T13:58:24.3713213Z",
+      "resolvedDateTime": "2019-03-22T14:03:16.2246313Z",
+      "description": "",
+      "essentialsVersion": "1.0",
+      "alertContextVersion": "1.0"
+    },
+    "alertContext": {
+      "properties": null,
+      "conditionType": "SingleResourceMultipleMetricCriteria",
+      "condition": {
+        "windowSize": "PT5M",
+        "allOf": [
+          {
+            "metricName": "Percentage CPU",
+            "metricNamespace": "Microsoft.Compute/virtualMachines",
+            "operator": "GreaterThan",
+            "threshold": "25",
+            "timeAggregation": "Average",
+            "dimensions": [
+              {
+                "name": "ResourceId",
+                "value": "3efad9dc-3d50-4eac-9c87-8b3fd6f97e4e"
+              }
+            ],
+            "metricValue": 7.727
+          }
+        ]
+      }
+    }
+  }
+}
+
+
+stress --cpu 2 --timeout 60000
+
+🚨 Azure Monitor 告警通知
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 基本信息
+   🔔 告警规则: @{triggerBody()?['data']?['essentials']?['alertRule']}
+   ⚠️ 严重级别: @{triggerBody()?['data']?['essentials']?['severity']}
+   📊 状态: @{triggerBody()?['data']?['essentials']?['monitorCondition']}
+   🕐 触发时间: @{triggerBody()?['data']?['essentials']?['firedDateTime']}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🖥️ 目标资源
+   💻 资源名称: @{triggerBody()?['data']?['essentials']?['configurationItems']?[0]}
+   📝 描述: @{triggerBody()?['data']?['essentials']?['description']}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📈 触发条件
+   📏 指标: @{triggerBody()?['data']?['alertContext']?['condition']?['allOf']?[0]?['metricName']}
+   🔢 运算符: @{triggerBody()?['data']?['alertContext']?['condition']?['allOf']?[0]?['operator']}
+   🎯 阈值: @{triggerBody()?['data']?['alertContext']?['condition']?['allOf']?[0]?['threshold']}
+   🔥 当前值: @{triggerBody()?['data']?['alertContext']?['condition']?['allOf']?[0]?['metricValue']}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔗 Azure Portal: https://portal.azure.com
