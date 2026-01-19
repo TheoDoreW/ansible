@@ -1,29 +1,3 @@
-请生成一个完整的测试用例 
-
-一台 Azure Linux VM（最好是红帽系的），通过 Azure Monitor Agent 监控基础的 Metric（比如 CPU MEM NET DISK 等），然后想针对这些指标做自定义告警，参考的 Link ：https://learn.microsoft.com/en-us/azure/azure-monitor/alerts/alerts-common-schema
-
-能不能从 VM 创建开始 一直到 Common Alert Schema 配置，端到端给一个完整的测试用例
-
-
-
-
-
-RG="rg-ama-common-schema-demo"
-LOCATION="eastasia"
-VM_NAME="vm-rhel-demo"
-VM_SIZE="Standard_B2s"
-ADMIN_USER="azureuser"
-
-DCR_NAME="dcr-${VM_NAME}-metrics"
-DCR_NAME="dcr-vm-rhel-demo-metrics"
-AG_NAME="ag-ama-common-schema"
-AG_SHORT="AG-Common"
-LOGIC_APP_NAME="la-alert-formatter"
-
-EMAIL_TO="xinsheng.wang@outlook.com"
-
-
-
 # 1) 资源组
 az group create --name $RG --location $LOCATION
 
@@ -40,16 +14,6 @@ az vm create \
 
 VM_ID=$(az vm show -g $RG -n $VM_NAME --query id -o tsv)
 
-{
-  "fqdns": "",
-  "id": "/subscriptions/ba10fd82-edf7-4c96-8c6a-2f46085f56f2/resourceGroups/rg-ama-common-schema-demo/providers/Microsoft.Compute/virtualMachines/vm-rhel-demo",
-  "location": "eastasia",
-  "macAddress": "60-45-BD-56-64-C1",
-  "powerState": "VM running",
-  "privateIpAddress": "10.0.0.4",
-  "publicIpAddress": "52.175.48.129",
-  "resourceGroup": "rg-ama-common-schema-demo"
-}
 
 
 DCR_ID=$(az monitor data-collection rule show -g $RG -n $DCR_NAME --query id -o tsv)
@@ -194,3 +158,347 @@ Write-Host "客户端证书(.pfx) 已导出: $pfxPath" -ForegroundColor Green
 # === 5) 可选：打印证书信息确认 ===
 $rootCert  | Format-List Subject,Thumbprint,HasPrivateKey,PSParentPath
 $clientCert| Format-List Subject,Thumbprint,HasPrivateKey,PSParentPath
+
+
+
+
+
+
+
+
+#!/bin/bash
+
+# === 变量定义 ===
+RG="rg-prometheus-grafana"
+LOCATION="eastasia"
+VNET_NAME="vnet-prometheus"
+SUBNET_PROM="subnet-prometheus"
+SUBNET_PLS="subnet-pls"
+LB_NAME="ilb-prometheus"
+PLS_NAME="pls-prometheus"
+VM_NAME="vm-prometheus"
+VM_SIZE="Standard_B2s"
+ADMIN_USER="azureuser"
+ADMIN_PASSWORD=""
+
+# Grafana 相关
+GRAFANA_NAME="mgrafana1"
+PE_NAME="pe-prometheus"
+
+# === 1. 创建资源组和网络 ===
+echo "创建资源组..."
+az group create --name $RG --location $LOCATION
+
+echo "创建虚拟网络..."
+az network vnet create \
+  --resource-group $RG \
+  --name $VNET_NAME \
+  --address-prefix 10.0.0.0/16
+
+# Prometheus 子网
+az network vnet subnet create \
+  --resource-group $RG \
+  --vnet-name $VNET_NAME \
+  --name $SUBNET_PROM \
+  --address-prefix 10.0.1.0/24
+
+# Private Link Service 子网
+az network vnet subnet create \
+  --resource-group $RG \
+  --vnet-name $VNET_NAME \
+  --name $SUBNET_PLS \
+  --address-prefix 10.0.2.0/24 \
+  --disable-private-link-service-network-policies true
+
+
+#!/bin/bash
+
+# === 2. 创建 Prometheus VM ===
+echo "创建 VM..."
+az vm create \
+  --resource-group $RG \
+  --name $VM_NAME \
+  --image Ubuntu2204 \
+  --size $VM_SIZE \
+  --vnet-name $VNET_NAME \
+  --subnet $SUBNET_PROM \
+  --admin-username $ADMIN_USER \
+  --admin-password "$ADMIN_PASSWORD" \
+  --public-ip-address "" \
+  --nsg-rule SSH
+
+# 获取 VM 的私有 IP
+VM_PRIVATE_IP=$(az vm show -d -g $RG -n $VM_NAME --query privateIps -o tsv)
+echo "VM Private IP: $VM_PRIVATE_IP"
+
+# === 3. 在 VM 上安装 Prometheus 和 Node Exporter ===
+cat > install-prometheus-node-exporter.sh << 'EOF'
+#!/bin/bash
+
+echo "=== 安装 Prometheus 和 Node Exporter ==="
+
+# 更新系统
+sudo apt-get update
+
+# === 安装 Node Exporter ===
+NODE_VERSION="1.6.1"
+cd /tmp
+wget https://github.com/prometheus/node_exporter/releases/download/v${NODE_VERSION}/node_exporter-${NODE_VERSION}.linux-amd64.tar.gz
+tar xvfz node_exporter-${NODE_VERSION}.linux-amd64.tar.gz
+
+# 创建用户和安装二进制文件
+sudo useradd --no-create-home --shell /bin/false node_exporter
+sudo cp node_exporter-${NODE_VERSION}.linux-amd64/node_exporter /usr/local/bin/
+sudo chown node_exporter:node_exporter /usr/local/bin/node_exporter
+
+# 创建 systemd 服务
+sudo tee /etc/systemd/system/node_exporter.service > /dev/null <<'SERVICE'
+[Unit]
+Description=Node Exporter
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=node_exporter
+Group=node_exporter
+Type=simple
+ExecStart=/usr/local/bin/node_exporter
+
+[Install]
+WantedBy=multi-user.target
+SERVICE
+
+# 启动 Node Exporter
+sudo systemctl daemon-reload
+sudo systemctl enable node_exporter
+sudo systemctl start node_exporter
+
+echo "Node Exporter 安装完成，运行在端口 9100"
+
+# === 安装 Prometheus ===
+PROM_VERSION="2.45.0"
+cd /tmp
+wget https://github.com/prometheus/prometheus/releases/download/v${PROM_VERSION}/prometheus-${PROM_VERSION}.linux-amd64.tar.gz
+tar xvfz prometheus-${PROM_VERSION}.linux-amd64.tar.gz
+
+# 创建用户和目录
+sudo useradd --no-create-home --shell /bin/false prometheus
+sudo mkdir -p /etc/prometheus /var/lib/prometheus
+sudo chown prometheus:prometheus /etc/prometheus /var/lib/prometheus
+
+# 复制二进制文件
+sudo cp prometheus-${PROM_VERSION}.linux-amd64/{prometheus,promtool} /usr/local/bin/
+sudo chown prometheus:prometheus /usr/local/bin/{prometheus,promtool}
+
+# 复制控制台文件
+sudo cp -r prometheus-${PROM_VERSION}.linux-amd64/consoles /etc/prometheus/
+sudo cp -r prometheus-${PROM_VERSION}.linux-amd64/console_libraries /etc/prometheus/
+sudo chown -R prometheus:prometheus /etc/prometheus/{consoles,console_libraries}
+
+# 创建 Prometheus 配置
+sudo tee /etc/prometheus/prometheus.yml > /dev/null <<'CONFIG'
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'prometheus-azure'
+    environment: 'production'
+
+scrape_configs:
+  # 监控 Prometheus 自身
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          instance: 'prometheus-server'
+
+  # 监控本机的 Node Exporter
+  - job_name: 'node'
+    static_configs:
+      - targets: ['localhost:9100']
+        labels:
+          instance: 'prometheus-vm'
+          role: 'monitoring'
+CONFIG
+
+sudo chown prometheus:prometheus /etc/prometheus/prometheus.yml
+
+# 创建 Prometheus systemd 服务
+sudo tee /etc/systemd/system/prometheus.service > /dev/null <<'SERVICE'
+[Unit]
+Description=Prometheus
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=prometheus
+Group=prometheus
+Type=simple
+ExecStart=/usr/local/bin/prometheus \
+  --config.file /etc/prometheus/prometheus.yml \
+  --storage.tsdb.path /var/lib/prometheus/ \
+  --web.console.templates=/etc/prometheus/consoles \
+  --web.console.libraries=/etc/prometheus/console_libraries \
+  --web.enable-lifecycle \
+  --storage.tsdb.retention.time=30d
+
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+SERVICE
+
+# 启动 Prometheus
+sudo systemctl daemon-reload
+sudo systemctl enable prometheus
+sudo systemctl start prometheus
+
+echo "Prometheus 安装完成，运行在端口 9090"
+
+# 验证服务状态
+echo ""
+echo "=== 服务状态 ==="
+sudo systemctl status node_exporter --no-pager | head -5
+sudo systemctl status prometheus --no-pager | head -5
+
+# 测试端口
+echo ""
+echo "=== 端口监听状态 ==="
+sudo ss -tlnp | grep -E ':(9090|9100)'
+
+# 测试 API
+echo ""
+echo "=== API 测试 ==="
+curl -s localhost:9090/api/v1/query?query=up | grep '"status":"success"' && echo "✓ Prometheus API 正常"
+curl -s localhost:9100/metrics | head -5 && echo "✓ Node Exporter 正常"
+
+echo ""
+echo "安装完成！"
+echo "Prometheus: http://localhost:9090"
+echo "Node Exporter: http://localhost:9100/metrics"
+EOF
+
+# 在 VM 上执行安装脚本
+echo "在 VM 上安装 Prometheus 和 Node Exporter..."
+az vm run-command invoke \
+  --resource-group $RG \
+  --name $VM_NAME \
+  --command-id RunShellScript \
+  --scripts @install-prometheus-node-exporter.sh
+
+
+#!/bin/bash
+
+# === 4. 创建标准负载均衡器 ===
+echo "创建内部负载均衡器..."
+az network lb create \
+  --resource-group $RG \
+  --name $LB_NAME \
+  --sku Standard \
+  --vnet-name $VNET_NAME \
+  --subnet $SUBNET_PROM \
+  --frontend-ip-name frontendIP \
+  --backend-pool-name prometheusPool
+
+# 创建健康探测
+az network lb probe create \
+  --resource-group $RG \
+  --lb-name $LB_NAME \
+  --name prometheusProbe \
+  --protocol tcp \
+  --port 9090 \
+  --interval 5
+
+# 创建负载均衡规则
+az network lb rule create \
+  --resource-group $RG \
+  --lb-name $LB_NAME \
+  --name prometheusRule \
+  --protocol tcp \
+  --frontend-port 9090 \
+  --backend-port 9090 \
+  --frontend-ip-name frontendIP \
+  --backend-pool-name prometheusPool \
+  --probe-name prometheusProbe
+
+# === 5. 将 VM 添加到负载均衡器后端池 ===
+echo "将 VM 添加到负载均衡器后端池..."
+NIC_NAME=$(az vm show -g $RG -n $VM_NAME --query 'networkProfile.networkInterfaces[0].id' -o tsv | xargs basename)
+
+az network nic ip-config update \
+  --resource-group $RG \
+  --nic-name $NIC_NAME \
+  --name ipconfig1 \
+  --lb-name $LB_NAME \
+  --lb-address-pools prometheusPool
+
+# === 6. 创建 Private Link Service ===
+echo "创建 Private Link Service..."
+FRONTEND_IP_ID=$(az network lb show \
+  --resource-group $RG \
+  --name $LB_NAME \
+  --query "frontendIpConfigurations[0].id" -o tsv)
+FRONTEND_IP_ID="/subscriptions/ba10fd82-edf7-4c96-8c6a-2f46085f56f2/resourceGroups/rg-prometheus-grafana/providers/Microsoft.Network/loadBalancers/ilb-prometheus/frontendIPConfigurations/frontendIP"
+
+az network private-link-service create \
+  --resource-group $RG \
+  --name $PLS_NAME \
+  --vnet-name $VNET_NAME \
+  --subnet $SUBNET_PLS \
+  --lb-frontend-ip-configs $FRONTEND_IP_ID \
+  --location $LOCATION
+
+# 获取 Private Link Service ID
+PLS_ID=$(az network private-link-service show \
+  --resource-group $RG \
+  --name $PLS_NAME \
+  --query id -o tsv)
+echo $PLS_ID
+
+echo "Private Link Service 创建完成"
+echo "PLS ID: $PLS_ID"
+
+
+#!/bin/bash
+
+# === 7. 在 Grafana 端创建 Private Endpoint ===
+echo "配置 Grafana Private Endpoint..."
+
+# 在 Prometheus 资源组创建 Private Endpoint（简化测试）
+# 实际生产中应该在 Grafana 的资源组/VNet 中创建
+PE_SUBNET="subnet-private-endpoint"
+
+# 创建 Private Endpoint 子网
+az network vnet subnet create \
+  --resource-group $RG \
+  --vnet-name $VNET_NAME \
+  --name $PE_SUBNET \
+  --address-prefix 10.0.3.0/24 \
+  --disable-private-endpoint-network-policies true
+
+# 创建 Private Endpoint
+az network private-endpoint create \
+  --resource-group $RG \
+  --name $PE_NAME \
+  --vnet-name $VNET_NAME \
+  --subnet $PE_SUBNET \
+  --private-connection-resource-id $PLS_ID \
+  --connection-name "prometheus-connection" \
+  --location $LOCATION
+
+# 获取 Private Endpoint IP
+PE_IP=$(az network private-endpoint show \
+  --resource-group $RG \
+  --name $PE_NAME \
+  --query "customDnsConfigs[0].ipAddresses[0]" -o tsv)
+
+echo "Private Endpoint 配置完成"
+echo "Private Endpoint IP: $PE_IP"
+echo ""
+echo "=== Grafana 数据源配置 ==="
+echo "在 Azure Managed Grafana 中添加 Prometheus 数据源："
+echo "URL: http://$PE_IP:9090"
+
+
+http://msl.pro.local:9090
