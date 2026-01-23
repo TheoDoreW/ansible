@@ -439,7 +439,7 @@ FRONTEND_IP_ID=$(az network lb show \
   --resource-group $RG \
   --name $LB_NAME \
   --query "frontendIpConfigurations[0].id" -o tsv)
-FRONTEND_IP_ID="/subscriptions/ba10fd82-edf7-4c96-8c6a-2f46085f56f2/resourceGroups/rg-prometheus-grafana/providers/Microsoft.Network/loadBalancers/ilb-prometheus/frontendIPConfigurations/frontendIP"
+FRONTEND_IP_ID="/subscriptions//resourceGroups/rg-prometheus-grafana/providers/Microsoft.Network/loadBalancers/ilb-prometheus/frontendIPConfigurations/frontendIP"
 
 az network private-link-service create \
   --resource-group $RG \
@@ -502,3 +502,7 @@ echo "URL: http://$PE_IP:9090"
 
 
 http://msl.pro.local:9090
+
+
+
+
