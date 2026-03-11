@@ -502,3 +502,11 @@ echo "URL: http://$PE_IP:9090"
 
 
 http://msl.pro.local:9090
+
+
+
+
+az resource show \
+  --ids /subscriptions/<subId>/resourceGroups/<rg>/providers/Microsoft.Network/applicationGateways/<appgw-name> \
+  --api-version 2023-09-01 \
+  --output json > appgw.json
