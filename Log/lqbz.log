@@ -504,10 +504,160 @@ echo "URL: http://$PE_IP:9090"
 http://msl.pro.local:9090
 
 
+ruizhenhuang.partner.onmschina.cn\msadmin
+msadmin@ruizhenhuang.partner.onmschina.cn
+admin1@ruizhenhuang.partner.onmschina.cn
+IBUser1@ruizhenhuang.partner.onmschina.cn
 
 
-az resource show \
-  --ids /subscriptions/<subId>/resourceGroups/<rg>/providers/Microsoft.Network/applicationGateways/<appgw-name> \
-  --api-version 2023-09-01 \
-  --output json > appgw.json
+
+/subscriptions/ba10fd82-edf7-4c96-8c6a-2f46085f56f2/resourceGroups/MA_xsamw_eastus_managed/providers/Microsoft.Insights/dataCollectionRules/xsamw
+
+
+az login
+az account set --subscription <subscriptionId>
+az deployment group create --name AmwLimits --resource-group xsrg --template-file AMWLimitIncrease-Template.json --parameters AMWLimitIncrease-Parameters.json
+
+
+
+SUB=ba10fd82-edf7-4c96-8c6a-2f46085f56f2
+RG=xsrg
+AMW=xsamw
+
+az account set -s $SUB
+AMW_ID=$(az resource show -g $RG -n $AMW \
+  --resource-type Microsoft.Monitor/accounts \
+  --query id -o tsv)
+
+echo $AMW_ID
+
+az monitor metrics list-definitions \
+  --resource $AMW_ID \
+  -o table
+
+
+# 查 Active Time Series Limit（当前上限）
+az monitor metrics list \
+  --resource $AMW_ID \
+  --metrics ActiveTimeSeriesLimit \
+  --interval PT1M \
+  --aggregation Average Maximum \
+  -o jsonc
+
+# 查 Events Per Minute Received Limit（当前上限）
+az monitor metrics list \
+  --resource $AMW_ID \
+  --metrics EventsPerMinuteIngestedLimit \
+  --interval PT1M \
+  --aggregation Average Maximum \
+  -o jsonc
+
+
+
+Done! Congratulations on your new bot. You will find it at t.me/tgcrawfishbot. You can now add a description, about section and profile picture for your bot, see /help for a list of commands. By the way, when you've finished creating your cool bot, ping our Bot Support if you want a better username for it. Just make sure the bot is fully operational before you do this.
+
+Use this token to access the HTTP API:
+
+Keep your token secure and store it safely, it can be used by anyone to control your bot.
+
+For a description of the Bot API, see this page: https://core.telegram.org/bots/api
+
+
+
+│  Dashboard link (with token):                                                    │
+│  http://127.0.0.1:18789/#token=88342c06be7f8e22d0ae259d2f6199f12e5ce7383b2c345f  │
+│  Copy/paste this URL in a browser on this machine to control OpenClaw.           │
+│  No GUI detected. Open from your computer:                                       │
+│  ssh -N -L 18789:127.0.0.1:18789 root@<host>                                     │
+│  Then open:                                                                      │
+│  http://localhost:18789/                                                         │
+│  http://localhost:18789/#token=88342c06be7f8e22d0ae259d2f6199f12e5ce7383b2c345f  │
+│  Docs:                                                                           │
+│  https://docs.openclaw.ai/gateway/remote                                         │
+│  https://docs.openclaw.ai/web/control-ui 
+
+
+AZURE_API_KEY=$(az account get-access-token \
+  --resource https://cognitiveservices.azure.com \
+  --query accessToken -o tsv)
+
+curl -X POST "https://admin-mmjzlh7t-eastus2.cognitiveservices.azure.com/openai/responses?api-version=2025-04-01-preview" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $AZURE_API_KEY" \
+    -d '{
+        "messages": [
+            {
+                "role": "user",
+                "content": ""
+            }
+        ],
+        "max_completion_tokens": 16384,
+        "model": "gpt-5.3-codex"
+    }'
+
+AZURE_API_KEY=$(az account get-access-token \
+  --resource https://cognitiveservices.azure.com \
+  --query accessToken -o tsv)
+
+curl -H "Authorization: Bearer $TOKEN" ...
+
+
+
+
+│  workspace: ~/.openclaw/workspace     │
+│  model: github-copilot/gpt-5.3-codex  │
+│  gateway.mode: local                  │
+│  gateway.port: 18789                  │
+│  gateway.bind: loopback 
+
+◇  Configure DM access policies now? (default: pairing)
+│  No
+Updated ~/.openclaw/openclaw.json
+Workspace OK: ~/.openclaw/workspace
+Sessions OK: ~/.openclaw/agents/main/sessions
+
+
+# /etc/systemd/system/openclaw-gateway.service
+
+[Unit]
+Description=OpenClaw Gateway Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/root/.openclaw
+Environment="OPENCLAW_HEADLESS=true"
+Environment="OPENCLAW_GATEWAY_HOST=127.0.0.1"
+Environment="OPENCLAW_GATEWAY_PORT=18789"
+Environment="OPENCLAW_LOG_LEVEL=info"
+EnvironmentFile=-/root/.openclaw/.env
+ExecStart=/usr/bin/openclaw gateway run
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=openclaw-gateway
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/root/.openclaw/data /root/.openclaw/logs
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target
+
+
+nohup /usr/bin/openclaw gateway run &
+
+
+
 
