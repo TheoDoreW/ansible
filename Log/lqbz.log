@@ -504,14 +504,11 @@ echo "URL: http://$PE_IP:9090"
 http://msl.pro.local:9090
 
 
-ruizhenhuang.partner.onmschina.cn\msadmin
-msadmin@ruizhenhuang.partner.onmschina.cn
-admin1@ruizhenhuang.partner.onmschina.cn
-IBUser1@ruizhenhuang.partner.onmschina.cn
+1
 
 
 
-/subscriptions/ba10fd82-edf7-4c96-8c6a-2f46085f56f2/resourceGroups/MA_xsamw_eastus_managed/providers/Microsoft.Insights/dataCollectionRules/xsamw
+1
 
 
 az login
@@ -520,7 +517,7 @@ az deployment group create --name AmwLimits --resource-group xsrg --template-fil
 
 
 
-SUB=ba10fd82-edf7-4c96-8c6a-2f46085f56f2
+1
 RG=xsrg
 AMW=xsamw
 
@@ -660,4 +657,20 @@ nohup /usr/bin/openclaw gateway run &
 
 
 
+msadmin
+
+mkdir C:\Data\DirA, C:\Data\DirB, C:\Data\DirC
+
+
+az storagesync sync-group cloud-endpoint list \
+  -g afsrg \
+  --storage-sync-service afs1 \
+  --sync-group-name sg-cloudata \
+  -o table
+
+az storagesync sync-group cloud-endpoint trigger-change-detection \
+  -g afsrg \
+  --storage-sync-service afs1 \
+  --sync-group-name sg-cloudata \
+  --name 1b03e6dd-fb24-4438-9ecb-14f047f63e5f
 
