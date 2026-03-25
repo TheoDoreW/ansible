@@ -672,5 +672,138 @@ az storagesync sync-group cloud-endpoint trigger-change-detection \
   -g afsrg \
   --storage-sync-service afs1 \
   --sync-group-name sg-cloudata \
-  --name 1b03e6dd-fb24-4438-9ecb-14f047f63e5f
+  --name 
 
+
+
+https://www.youtube.com/watch?v=Rgo4MiHBtLg
+
+\\stavdmsixdemo001.file.core.chinacloudapi.cn\msix
+
+
+'C:\Users\xinswang\Downloads\msixmgr\x64\msixmgr.exe' -Unpack -packagePath "C:\Users\xinswang\Desktop\MSIXAPP7-zip_1.0.0.0_x64__az5m5285barq0.msix" -destination "C:\Users\xinswang\Desktop\MSIXAPP7-zip_1.0.0.0_x64__az5m5285barq0.cim" -applyACLs -create -fileType cim -rootDirectory apps
+
+
+az storage file upload-batch \
+  --account-name stavdmsixdemo001 \
+  --destination msix \
+  --destination-path "7zip-demo" \
+  --source "7zip" \
+  --auth-mode login
+
+
+SUB_ID=$(az account show --query id -o tsv)
+RG=ibavdrg
+SA=stavdmsixdemo001
+
+SCOPE="/subscriptions/$SUB_ID/resourceGroups/$RG/providers/Microsoft.Storage/storageAccounts/$SA"
+echo $SCOPE
+
+mkdir C:\Users\msadmin\MSIX\Cert
+cd C:\Users\msadmin\MSIX\Cert
+
+$cert = New-SelfSignedCertificate `
+  -Type Custom `
+  -Subject "CN=AVDMSIXDemoSigner" `
+  -KeyUsage DigitalSignature `
+  -FriendlyName "AVD MSIX Demo Signer" `
+  -CertStoreLocation "Cert:\CurrentUser\My" `
+  -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3") `
+  -KeyAlgorithm RSA `
+  -KeyLength 2048 `
+  -HashAlgorithm SHA256
+
+$password = ConvertTo-SecureString -String "" -Force -AsPlainText
+
+Export-PfxCertificate `
+  -Cert "Cert:\CurrentUser\My\$($cert.Thumbprint)" `
+  -FilePath "C:\Users\msadmin\MSIX\Cert\AVDMSIXDemoSigner.pfx" `
+  -Password $password
+
+Export-Certificate `
+  -Cert "Cert:\CurrentUser\My\$($cert.Thumbprint)" `
+  -FilePath "C:\Users\msadmin\MSIX\Cert\AVDMSIXDemoSigner.cer"
+
+
+$cert = New-SelfSignedCertificate -CertStoreLocation Cert:\LocalMachine\My -DnsName 'xinsheng' -Type CodeSigningCert -Verbose
+
+$secPassword = ConvertTo-SecureString -String 'P@ssw0rd123!' -Force -AsPlainText
+
+$certPath = "Cert:\LocalMachine\My\$($Cert.Thumbprint)"
+
+Export-PfxCertificate -Cert $certPath -FilePath 'C:\Users\msadmin\MSIX\CertNew\CodeSigning.pfx' -Password $secPassword
+
+
+
+
+& "C:\Tools\msixmgr\msixmgr.exe" `
+  -Unpack `
+  -packagePath "C:\MSIX\Output\SevenZipDemo.msix" `
+  -destination "C:\MSIX\Image\SevenZipDemo\SevenZipDemo.cim" `
+  -applyACLs `
+  -create `
+  -fileType cim `
+  -rootDirectory apps
+
+
+C:\Tools\msixmgr\msixmgr.exe -Unpack -packagePath "C:\MSIX\Output\SevenZipDemo.msix" -destination "C:\MSIX\Image\SevenZipDemo\SevenZipDemo.cim" -applyACLs -create -fileType cim -rootDirectory apps
+
+
+az storage file upload-batch \
+  --account-name stavdmsixdemo001 \
+  --destination msix \
+  --destination-path "7zip-demo" \
+  --source "SevenZipDemo" \
+  --auth-mode login
+
+Microsoft2026!
+
+az vm user update \
+  --resource-group ibavdrg \
+  --name ibavdsh1-0 \
+  --username msadmin \
+  --password ''
+
+
+New-VHD -SizeBytes 500MB -Path C:\Users\msadmin\MSIX\Package\7zip.vhd -Dynamic -Confirm:$false
+$vhdObject = Mount-VHD C:\Users\msadmin\MSIX\Package\7zip.vhd -Passthru
+$disk = Initialize-Disk -Passthru -Number $vhdObject.Number
+$partition = New-Partition -AssignDriveLetter -UseMaximumSize -DiskNumber $disk.Number
+Format-Volume -FileSystem NTFS -Confirm:$false -DriveLetter $partition.DriveLetter -Force
+mkdir E:\7zip
+
+.\msixmgr.exe -Unpack -packagePath C:\Users\msadmin\MSIX\Package\7zip.msix -destination "E:\7zip" -applyacls
+
+disMount-VHD C:\Users\msadmin\MSIX\Package\7zip.vhd
+
+
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser
+.\CopyToPSPath.ps1 
+Import-Module -Name AzFilesHybrid
+Connect-AzAccount
+Connect-AzAccount -Environment AzureChinaCloud
+$subscriptionId = ""
+$resourceGroupName = "ibavdrg"
+$storageAccountName = "stavdmsixdemo001"
+Join-AzStorageAccount `
+    -ResourceGroupName $ResourceGroupName `
+    -StorageAccountName $StorageAccountName `
+    -DomainAccountType "ComputerAccount" `
+    -EncryptionType "AES256"
+$resourceGroupName = "resource-group-name"
+$storageAccountName = "storage-account-name"
+(Get-AzStorageAccount -ResourceGroupName $resourceGroupName -Name $storageAccountName).AzureFilesIdentityBasedAuth.DirectoryServiceOptions; (Get-AzStorageAccount -ResourceGroupName $resourceGroupName -Name $storageAccountName).AzureFilesIdentityBasedAuth.ActiveDirectoryProperties
+
+
+net use Z: \\stavdmsixdemo001.file.core.chinacloudapi.cn\msix  /user:Azure\stavdmsixdemo001
+
+$cert = New-SelfSignedCertificate -CertStoreLocation Cert:\LocalMachine\My -DnsName 'yourdomainname' -Type CodeSigningCert -Verbose
+
+$secPassword = ConvertTo-SecureString -String 'yourpassword' -Force -AsPlainText
+
+$certPath = "Cert:\LocalMachine\My\$($Cert.Thumbprint)"
+
+Export-PfxCertificate -Cert $certPath -FilePath 'C:\temp\CodeSigning.pfx' -Password $secPassword
+
+
+\\stavdmsixdemo001.file.core.chinacloudapi.cn\msix\7zip-demo\7zip.vhd
